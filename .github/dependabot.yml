@@ -1,0 +1,55 @@
+# Dependabot proposes dependency updates as pull requests.
+#
+# In plain terms: a few times a year, GitHub checks whether the libraries and CI actions
+# this lab uses have new versions and opens at most three pull requests. Each one runs the
+# full check workflow before anyone merges it. Security fixes are not limited by this
+# schedule; GitHub raises those separately when they are enabled for the repository.
+#
+# Quarterly is the least frequent interval Dependabot offers (daily, weekly, monthly,
+# quarterly, semiannually, yearly) that still runs at least once a quarter.
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: quarterly
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: deps
+    groups:
+      # The Strands SDK is what this lab teaches, so its updates arrive on their own
+      # and can be read against the SDK's release notes. Listed first so it wins.
+      strands-sdk:
+        patterns:
+          - "@strands-agents/sdk"
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # Major TypeScript and ESLint releases change rules and types across the codebase;
+      # take them deliberately rather than from a bot.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@eslint/js"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: quarterly
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch

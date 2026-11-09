@@ -1,0 +1,80 @@
+/*
+  Design tokens: editorial + modern brutalism. Every colour pairing used on the page is
+  contrast-tested in tests/tokens.test.ts (text 4.5:1, UI parts, focus and chart marks 3:1).
+
+  Rules
+  - Brand red and yellow are FILLS with black text, never text on the page background.
+  - Outcome colours (allowed, refused, failed) are separate from brand colours and always
+    come with a label and an icon. A refusal is neutral: the system working as designed.
+  - Light and dark come from this one file. The page follows the system setting until the
+    visitor chooses; data-theme on <html> records that choice.
+*/
+:root {
+  color-scheme: light;
+  --paper: #ffffff;
+  --surface: #f0f0f0;
+  --ink: #000000;
+  --ink-muted: #3d3d3d;
+  --rule: #000000;
+
+  --brand-red: #ff3333;
+  --brand-red-ink: #000000;
+  --brand-red-text: #c70000;
+  --brand-yellow: #ffff00;
+  --brand-yellow-ink: #000000;
+  --link: #0050c8;
+  --focus: #0050c8;
+
+  --outcome-ok: #0a6b2d;
+  --outcome-refused: #3d3d3d;
+  --outcome-refused-fill: #f0f0f0;
+  --outcome-failed: #b00020;
+
+  --series-1: #0050c8;
+  --series-2: #c24f00;
+
+  --font-display: ui-serif, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --border-width: 2px;
+  --shadow-offset: 4px;
+  --radius: 0px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #111111;
+    --surface: #1c1c1c;
+    --ink: #f5f5f5;
+    --ink-muted: #c4c4c4;
+    --rule: #f5f5f5;
+    --brand-red-text: #ff7a7a;
+    --link: #7fb2ff;
+    --focus: #7fb2ff;
+    --outcome-ok: #5fd38a;
+    --outcome-refused: #c4c4c4;
+    --outcome-refused-fill: #1c1c1c;
+    --outcome-failed: #ff7a7a;
+    --series-1: #7fb2ff;
+    --series-2: #ff9f5a;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #111111;
+  --surface: #1c1c1c;
+  --ink: #f5f5f5;
+  --ink-muted: #c4c4c4;
+  --rule: #f5f5f5;
+  --brand-red-text: #ff7a7a;
+  --link: #7fb2ff;
+  --focus: #7fb2ff;
+  --outcome-ok: #5fd38a;
+  --outcome-refused: #c4c4c4;
+  --outcome-refused-fill: #1c1c1c;
+  --outcome-failed: #ff7a7a;
+  --series-1: #7fb2ff;
+  --series-2: #ff9f5a;
+}

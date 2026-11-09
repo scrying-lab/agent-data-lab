@@ -1,0 +1,45 @@
+# Link-check rules for .github/workflows/links.yml (lychee 0.24.x).
+#
+# In plain terms: follow every link in the project's Markdown and fail on broken ones,
+# but skip links that cannot be checked from a CI machine (local addresses, placeholders,
+# and sites that refuse automated visitors). Check skipped links by hand before a release.
+#
+# Run it locally, if lychee is installed:
+#   lychee --config lychee.toml README.md docs/*.md
+
+no_progress = true
+verbose = "warn"
+
+# Be polite to the sites we link to, and give slow ones a fair chance.
+max_concurrency = 8
+max_retries = 3
+retry_wait_time = 4
+timeout = 30
+
+# 429 means "too many requests": the page exists but the site asked us to slow down.
+# Treat it as a pass so a busy site does not fail the build.
+accept = ["200..=299", "429"]
+
+# Never try to reach private networks or this machine (localhost, 127.0.0.1, 10.x, ...).
+exclude_all_private = true
+
+# Do not check links inside code blocks; those are examples, not references.
+include_verbatim = false
+
+exclude = [
+  # Local development servers named in run instructions.
+  '^https?://localhost',
+  '^https?://127\.0\.0\.1',
+  '^https?://\[::1\]',
+  # The '#try-it' anchor is a placeholder until the hosted lab URL is final.
+  '#try-it$',
+  # Reserved example and test domains never resolve to real pages.
+  '^https?://([a-z0-9-]+\.)*example\.(com|org|net)',
+  '^https?://([a-z0-9-]+\.)*[a-z0-9-]+\.(invalid|test|localhost)([/:]|$)',
+  # Social sites block automated checks (LinkedIn answers 999, X answers 403).
+  '^https?://([a-z0-9-]+\.)*linkedin\.com',
+  '^https?://(www\.)?(x|twitter)\.com',
+  # Signed-in or private pages cannot be checked anonymously.
+  '^https?://github\.com/[^/]+/[^/]+/settings',
+  '^https?://console\.aws\.amazon\.com',
+]

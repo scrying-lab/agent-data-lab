@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>Agent Data Lab · browser harness</title>
+  </head>
+  <body>
+    <main>
+      <h1>Browser harness</h1>
+      <p>Runs the governance lesson's real Strands agent loop in this page, with the gate checking every tool call. A script plays the model's part, the data is synthetic, and nothing leaves the page. Used by automated tests; pick a scenario with <code>?preset=gov-default</code>.</p>
+      <p>Label: <span id="label">running</span></p>
+      <p>Answer: <span id="answer">running</span></p>
+      <output id="result" aria-live="off">running</output>
+    </main>
+    <script type="module" src="/src/harness.ts"></script>
+  </body>
+</html>

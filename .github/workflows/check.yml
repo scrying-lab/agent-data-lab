@@ -1,0 +1,102 @@
+# Checks every pull request and every push to the published branch.
+# pages.yml also calls this workflow and only deploys the site if it passes.
+#
+# In plain terms: before anything is merged or published, a clean machine installs the
+# project exactly as a visitor would, runs the same checks you can run locally with
+# `npm run check`, opens the built site in two browsers, and scans for leaked secrets.
+#
+# Housekeeping rules for anyone editing this file:
+# - Every third-party action is pinned to a full commit SHA, with its version in a comment.
+#   Dependabot (see .github/dependabot.yml) proposes updates to these pins.
+# - Each job asks only for the permissions it needs.
+# - Nothing here runs on a schedule, so nothing breaks when the repository is quiet.
+name: Check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  # Lets pages.yml run these exact checks as a gate before every deploy.
+  workflow_call:
+
+permissions: {}
+
+# When pages.yml calls this file, github.workflow is "Pages", so the gate gets its own
+# group and never queues behind (or cancels) the standalone Check run for the same push.
+concurrency:
+  group: check-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # gitleaks is run as a plain binary (the gitleaks GitHub Action needs a paid licence
+  # for organization repositories). The checksum below was read from the release's
+  # checksums file and matches the digest GitHub records for the asset.
+  GITLEAKS_VERSION: 8.30.1
+  GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+
+jobs:
+  check:
+    name: Typecheck, lint, test, build, browsers, secrets
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out the full history (the secret scan reads every commit)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node from .nvmrc
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install exact dependencies from the lockfile
+        run: npm ci
+
+      - name: Install browsers for the end-to-end tests
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Explain what this run does not cover
+        run: >-
+          echo "::notice title=Private-term scan::CI runs the generic public-safety scan only.
+          The private-term scan needs a denylist that never enters the repository, so it runs
+          locally before anything is published."
+
+      - name: Typecheck, lint, unit tests, build, bundle check, generic public-safety scan
+        run: npm run check
+
+      - name: End-to-end tests (Chromium and WebKit)
+        run: npx playwright test
+
+      - name: Install gitleaks (pinned version, checksum verified)
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          sums="gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          curl -fsSLO "$base/$tarball"
+          curl -fsSLO "$base/$sums"
+          # Verify against the release's checksums file, then against the pinned value above.
+          awk -v f="$tarball" '$2 == f' "$sums" | sha256sum -c -
+          echo "${GITLEAKS_SHA256}  ${tarball}" | sha256sum -c -
+          mkdir -p gitleaks-bin
+          tar -xzf "$tarball" -C gitleaks-bin gitleaks
+          echo "$RUNNER_TEMP/gitleaks-bin" >> "$GITHUB_PATH"
+
+      - name: Scan every commit for secrets
+        if: ${{ !cancelled() }}
+        run: gitleaks git --redact --no-banner --verbose .
+
+      - name: Scan the built site for secrets
+        if: ${{ !cancelled() && hashFiles('dist/index.html') != '' }}
+        run: gitleaks dir dist --redact --no-banner --verbose

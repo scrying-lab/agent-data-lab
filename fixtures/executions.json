@@ -1,0 +1,1916 @@
+[
+  {
+    "contractVersion": "lab-run/v1",
+    "runId": "hourly-both-1",
+    "lesson": "analytics",
+    "scenario": "hourly",
+    "tier": "replay",
+    "provider": {
+      "kind": "scripted",
+      "modelId": "scripted-control-v1"
+    },
+    "sdkVersion": "1.24.0",
+    "recordedAt": "2026-11-09T17:14:19.296Z",
+    "caller": null,
+    "prompt": "How does hourly demand change on working days?",
+    "events": [
+      {
+        "seq": 0,
+        "tMs": 10.8,
+        "kind": "request",
+        "text": "How does hourly demand change on working days?"
+      },
+      {
+        "seq": 1,
+        "tMs": 21.3,
+        "kind": "model_turn",
+        "status": "success",
+        "stopReason": "toolUse"
+      },
+      {
+        "seq": 2,
+        "tMs": 22.7,
+        "kind": "tool_requested",
+        "tool": "compareHourlyPatterns",
+        "toolUseId": "read-1",
+        "input": {
+          "period": "both"
+        }
+      },
+      {
+        "seq": 3,
+        "tMs": 23.3,
+        "kind": "gate",
+        "tool": "compareHourlyPatterns",
+        "toolUseId": "read-1",
+        "decision": "allow"
+      },
+      {
+        "seq": 4,
+        "tMs": 39.6,
+        "kind": "tool_executed",
+        "tool": "compareHourlyPatterns",
+        "toolUseId": "read-1",
+        "resourceIds": [
+          "hour.csv"
+        ],
+        "rows": 17379
+      },
+      {
+        "seq": 5,
+        "tMs": 40.1,
+        "kind": "tool_result",
+        "tool": "compareHourlyPatterns",
+        "toolUseId": "read-1",
+        "status": "success"
+      },
+      {
+        "seq": 6,
+        "tMs": 41.1,
+        "kind": "model_turn",
+        "status": "success",
+        "stopReason": "endTurn"
+      },
+      {
+        "seq": 7,
+        "tMs": 41.1,
+        "kind": "answer",
+        "text": "Working days at 17:00 averaged 525.3 rentals per observed hour (n = 499). Nonworking days at 13:00 averaged 372.7 rentals per observed hour (n = 231)."
+      },
+      {
+        "seq": 8,
+        "tMs": 41.6,
+        "kind": "run_closed",
+        "status": "success",
+        "stopReason": "endTurn"
+      }
+    ],
+    "ledger": [
+      {
+        "tool": "compareHourlyPatterns",
+        "classifications": [
+          "public"
+        ],
+        "resourceIds": [
+          "hour.csv"
+        ]
+      }
+    ],
+    "result": {
+      "period": "both",
+      "points": [
+        {
+          "group": "Nonworking days",
+          "hour": 0,
+          "mean": 90.79999999999997,
+          "n": 230
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 1,
+          "mean": 69.50869565217393,
+          "n": 230
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 2,
+          "mean": 53.17105263157894,
+          "n": 228
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 3,
+          "mean": 25.775330396475777,
+          "n": 227
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 4,
+          "mean": 8.264317180616736,
+          "n": 227
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 5,
+          "mean": 8.689189189189191,
+          "n": 222
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 6,
+          "mean": 18.74235807860261,
+          "n": 229
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 7,
+          "mean": 43.40692640692639,
+          "n": 231
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 8,
+          "mean": 105.65367965367962,
+          "n": 231
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 9,
+          "mean": 171.62337662337663,
+          "n": 231
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 10,
+          "mean": 255.90909090909102,
+          "n": 231
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 11,
+          "mean": 315.3160173160172,
+          "n": 231
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 12,
+          "mean": 366.25974025974034,
+          "n": 231
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 13,
+          "mean": 372.73160173160153,
+          "n": 231
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 14,
+          "mean": 364.6450216450217,
+          "n": 231
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 15,
+          "mean": 358.813852813853,
+          "n": 231
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 16,
+          "mean": 352.7272727272729,
+          "n": 231
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 17,
+          "mean": 323.5497835497835,
+          "n": 231
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 18,
+          "mean": 281.0565217391304,
+          "n": 230
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 19,
+          "mean": 231.6739130434783,
+          "n": 230
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 20,
+          "mean": 174.73913043478265,
+          "n": 230
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 21,
+          "mean": 142.06086956521744,
+          "n": 230
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 22,
+          "mean": 116.06086956521737,
+          "n": 230
+        },
+        {
+          "group": "Nonworking days",
+          "hour": 23,
+          "mean": 85.93043478260861,
+          "n": 230
+        },
+        {
+          "group": "Working days",
+          "hour": 0,
+          "mean": 36.78629032258062,
+          "n": 496
+        },
+        {
+          "group": "Working days",
+          "hour": 1,
+          "mean": 16.55263157894736,
+          "n": 494
+        },
+        {
+          "group": "Working days",
+          "hour": 4,
+          "mean": 5.429787234042546,
+          "n": 470
+        },
+        {
+          "group": "Working days",
+          "hour": 5,
+          "mean": 24.913131313131306,
+          "n": 495
+        },
+        {
+          "group": "Working days",
+          "hour": 6,
+          "mean": 102.49999999999993,
+          "n": 496
+        },
+        {
+          "group": "Working days",
+          "hour": 7,
+          "mean": 290.6129032258068,
+          "n": 496
+        },
+        {
+          "group": "Working days",
+          "hour": 8,
+          "mean": 477.0060483870968,
+          "n": 496
+        },
+        {
+          "group": "Working days",
+          "hour": 9,
+          "mean": 241.5181451612902,
+          "n": 496
+        },
+        {
+          "group": "Working days",
+          "hour": 10,
+          "mean": 135.36693548387095,
+          "n": 496
+        },
+        {
+          "group": "Working days",
+          "hour": 11,
+          "mean": 158.22983870967732,
+          "n": 496
+        },
+        {
+          "group": "Working days",
+          "hour": 12,
+          "mean": 200.82092555332002,
+          "n": 497
+        },
+        {
+          "group": "Working days",
+          "hour": 13,
+          "mean": 198.429718875502,
+          "n": 498
+        },
+        {
+          "group": "Working days",
+          "hour": 14,
+          "mean": 183.57228915662634,
+          "n": 498
+        },
+        {
+          "group": "Working days",
+          "hour": 15,
+          "mean": 201.3313253012048,
+          "n": 498
+        },
+        {
+          "group": "Working days",
+          "hour": 16,
+          "mean": 293.1222444889779,
+          "n": 499
+        },
+        {
+          "group": "Working days",
+          "hour": 17,
+          "mean": 525.2905811623251,
+          "n": 499
+        },
+        {
+          "group": "Working days",
+          "hour": 18,
+          "mean": 492.226907630522,
+          "n": 498
+        },
+        {
+          "group": "Working days",
+          "hour": 19,
+          "mean": 348.401606425703,
+          "n": 498
+        },
+        {
+          "group": "Working days",
+          "hour": 20,
+          "mean": 249.71887550200796,
+          "n": 498
+        },
+        {
+          "group": "Working days",
+          "hour": 21,
+          "mean": 186.28714859437744,
+          "n": 498
+        },
+        {
+          "group": "Working days",
+          "hour": 22,
+          "mean": 138.3895582329318,
+          "n": 498
+        },
+        {
+          "group": "Working days",
+          "hour": 23,
+          "mean": 88.70883534136547,
+          "n": 498
+        },
+        {
+          "group": "Working days",
+          "hour": 2,
+          "mean": 8.683778234086235,
+          "n": 487
+        },
+        {
+          "group": "Working days",
+          "hour": 3,
+          "mean": 4.942553191489364,
+          "n": 470
+        }
+      ],
+      "n": 17379,
+      "answer": "Working days at 17:00 averaged 525.3 rentals per observed hour (n = 499). Nonworking days at 13:00 averaged 372.7 rentals per observed hour (n = 231)."
+    },
+    "finalText": "Working days at 17:00 averaged 525.3 rentals per observed hour (n = 499). Nonworking days at 13:00 averaged 372.7 rentals per observed hour (n = 231).",
+    "outcome": {
+      "status": "ok"
+    },
+    "usage": null,
+    "elapsedMs": 41.6
+  },
+  {
+    "contractVersion": "lab-run/v1",
+    "runId": "hourly-both-0",
+    "lesson": "analytics",
+    "scenario": "hourly",
+    "tier": "replay",
+    "provider": {
+      "kind": "scripted",
+      "modelId": "scripted-control-v1"
+    },
+    "sdkVersion": "1.24.0",
+    "recordedAt": "2026-11-09T17:14:19.310Z",
+    "caller": null,
+    "prompt": "How does hourly demand change on working days?",
+    "events": [
+      {
+        "seq": 0,
+        "tMs": 0.4,
+        "kind": "request",
+        "text": "How does hourly demand change on working days?"
+      },
+      {
+        "seq": 1,
+        "tMs": 1.1,
+        "kind": "model_turn",
+        "status": "success",
+        "stopReason": "toolUse"
+      },
+      {
+        "seq": 2,
+        "tMs": 1.1,
+        "kind": "tool_requested",
+        "tool": "compareHourlyPatterns",
+        "toolUseId": "read-1",
+        "input": {
+          "period": "both"
+        }
+      },
+      {
+        "seq": 3,
+        "tMs": 1.2,
+        "kind": "gate",
+        "tool": "compareHourlyPatterns",
+        "toolUseId": "read-1",
+        "decision": "deny",
+        "stage": "budget",
+        "code": "READ_BUDGET_EXHAUSTED"
+      },
+      {
+        "seq": 4,
+        "tMs": 1.2,
+        "kind": "tool_result",
+        "tool": "compareHourlyPatterns",
+        "toolUseId": "read-1",
+        "status": "error"
+      },
+      {
+        "seq": 5,
+        "tMs": 1.5,
+        "kind": "model_turn",
+        "status": "success",
+        "stopReason": "endTurn"
+      },
+      {
+        "seq": 6,
+        "tMs": 1.5,
+        "kind": "answer",
+        "text": "The data request was blocked. No chart was produced."
+      },
+      {
+        "seq": 7,
+        "tMs": 1.8,
+        "kind": "run_closed",
+        "status": "success",
+        "stopReason": "endTurn"
+      }
+    ],
+    "ledger": [],
+    "result": null,
+    "finalText": "The data request was blocked. No chart was produced.",
+    "outcome": {
+      "status": "denied",
+      "code": "READ_BUDGET_EXHAUSTED"
+    },
+    "usage": null,
+    "elapsedMs": 1.8
+  },
+  {
+    "contractVersion": "lab-run/v1",
+    "runId": "weather-both-1",
+    "lesson": "analytics",
+    "scenario": "weather",
+    "tier": "replay",
+    "provider": {
+      "kind": "scripted",
+      "modelId": "scripted-control-v1"
+    },
+    "sdkVersion": "1.24.0",
+    "recordedAt": "2026-11-09T17:14:19.317Z",
+    "caller": null,
+    "prompt": "How do rentals vary with the weather?",
+    "events": [
+      {
+        "seq": 0,
+        "tMs": 0.3,
+        "kind": "request",
+        "text": "How do rentals vary with the weather?"
+      },
+      {
+        "seq": 1,
+        "tMs": 0.5,
+        "kind": "model_turn",
+        "status": "success",
+        "stopReason": "toolUse"
+      },
+      {
+        "seq": 2,
+        "tMs": 0.6,
+        "kind": "tool_requested",
+        "tool": "summarizeWeatherConditions",
+        "toolUseId": "read-1",
+        "input": {
+          "period": "both"
+        }
+      },
+      {
+        "seq": 3,
+        "tMs": 0.6,
+        "kind": "gate",
+        "tool": "summarizeWeatherConditions",
+        "toolUseId": "read-1",
+        "decision": "allow"
+      },
+      {
+        "seq": 4,
+        "tMs": 6.6,
+        "kind": "tool_executed",
+        "tool": "summarizeWeatherConditions",
+        "toolUseId": "read-1",
+        "resourceIds": [
+          "hour.csv"
+        ],
+        "rows": 17379
+      },
+      {
+        "seq": 5,
+        "tMs": 6.7,
+        "kind": "tool_result",
+        "tool": "summarizeWeatherConditions",
+        "toolUseId": "read-1",
+        "status": "success"
+      },
+      {
+        "seq": 6,
+        "tMs": 7.1,
+        "kind": "model_turn",
+        "status": "success",
+        "stopReason": "endTurn"
+      },
+      {
+        "seq": 7,
+        "tMs": 7.1,
+        "kind": "answer",
+        "text": "Clear / few clouds averaged 204.9 rentals per observed hour (n = 11413). This is the highest observed category average. Weather and demand can both vary with season and time of day."
+      },
+      {
+        "seq": 8,
+        "tMs": 7.2,
+        "kind": "run_closed",
+        "status": "success",
+        "stopReason": "endTurn"
+      }
+    ],
+    "ledger": [
+      {
+        "tool": "summarizeWeatherConditions",
+        "classifications": [
+          "public"
+        ],
+        "resourceIds": [
+          "hour.csv"
+        ]
+      }
+    ],
+    "result": {
+      "period": "both",
+      "points": [
+        {
+          "group": "Clear / few clouds",
+          "hour": null,
+          "mean": 204.86927188294112,
+          "n": 11413
+        },
+        {
+          "group": "Mist / cloudy",
+          "hour": null,
+          "mean": 175.1654929577461,
+          "n": 4544
+        },
+        {
+          "group": "Light rain or snow",
+          "hour": null,
+          "mean": 111.57928118393244,
+          "n": 1419
+        },
+        {
+          "group": "Heavy rain or snow",
+          "hour": null,
+          "mean": 74.33333333333333,
+          "n": 3
+        }
+      ],
+      "n": 17379,
+      "answer": "Clear / few clouds averaged 204.9 rentals per observed hour (n = 11413). This is the highest observed category average. Weather and demand can both vary with season and time of day."
+    },
+    "finalText": "Clear / few clouds averaged 204.9 rentals per observed hour (n = 11413). This is the highest observed category average. Weather and demand can both vary with season and time of day.",
+    "outcome": {
+      "status": "ok"
+    },
+    "usage": null,
+    "elapsedMs": 7.2
+  },
+  {
+    "contractVersion": "lab-run/v1",
+    "runId": "weather-both-0",
+    "lesson": "analytics",
+    "scenario": "weather",
+    "tier": "replay",
+    "provider": {
+      "kind": "scripted",
+      "modelId": "scripted-control-v1"
+    },
+    "sdkVersion": "1.24.0",
+    "recordedAt": "2026-11-09T17:14:19.318Z",
+    "caller": null,
+    "prompt": "How do rentals vary with the weather?",
+    "events": [
+      {
+        "seq": 0,
+        "tMs": 0.3,
+        "kind": "request",
+        "text": "How do rentals vary with the weather?"
+      },
+      {
+        "seq": 1,
+        "tMs": 0.5,
+        "kind": "model_turn",
+        "status": "success",
+        "stopReason": "toolUse"
+      },
+      {
+        "seq": 2,
+        "tMs": 0.6,
+        "kind": "tool_requested",
+        "tool": "summarizeWeatherConditions",
+        "toolUseId": "read-1",
+        "input": {
+          "period": "both"
+        }
+      },
+      {
+        "seq": 3,
+        "tMs": 0.6,
+        "kind": "gate",
+        "tool": "summarizeWeatherConditions",
+        "toolUseId": "read-1",
+        "decision": "deny",
+        "stage": "budget",
+        "code": "READ_BUDGET_EXHAUSTED"
+      },
+      {
+        "seq": 4,
+        "tMs": 0.6,
+        "kind": "tool_result",
+        "tool": "summarizeWeatherConditions",
+        "toolUseId": "read-1",
+        "status": "error"
+      },
+      {
+        "seq": 5,
+        "tMs": 0.8,
+        "kind": "model_turn",
+        "status": "success",
+        "stopReason": "endTurn"
+      },
+      {
+        "seq": 6,
+        "tMs": 0.8,
+        "kind": "answer",
+        "text": "The data request was blocked. No chart was produced."
+      },
+      {
+        "seq": 7,
+        "tMs": 0.9,
+        "kind": "run_closed",
+        "status": "success",
+        "stopReason": "endTurn"
+      }
+    ],
+    "ledger": [],
+    "result": null,
+    "finalText": "The data request was blocked. No chart was produced.",
+    "outcome": {
+      "status": "denied",
+      "code": "READ_BUDGET_EXHAUSTED"
+    },
+    "usage": null,
+    "elapsedMs": 0.9
+  },
+  {
+    "contractVersion": "lab-run/v1",
+    "runId": "week-both-1",
+    "lesson": "analytics",
+    "scenario": "week",
+    "tier": "replay",
+    "provider": {
+      "kind": "scripted",
+      "modelId": "scripted-control-v1"
+    },
+    "sdkVersion": "1.24.0",
+    "recordedAt": "2026-11-09T17:14:19.325Z",
+    "caller": null,
+    "prompt": "Which weekday and hour see the most rentals?",
+    "events": [
+      {
+        "seq": 0,
+        "tMs": 0.1,
+        "kind": "request",
+        "text": "Which weekday and hour see the most rentals?"
+      },
+      {
+        "seq": 1,
+        "tMs": 0.4,
+        "kind": "model_turn",
+        "status": "success",
+        "stopReason": "toolUse"
+      },
+      {
+        "seq": 2,
+        "tMs": 0.4,
+        "kind": "tool_requested",
+        "tool": "getWeekdayHourMatrix",
+        "toolUseId": "read-1",
+        "input": {
+          "period": "both"
+        }
+      },
+      {
+        "seq": 3,
+        "tMs": 0.4,
+        "kind": "gate",
+        "tool": "getWeekdayHourMatrix",
+        "toolUseId": "read-1",
+        "decision": "allow"
+      },
+      {
+        "seq": 4,
+        "tMs": 6,
+        "kind": "tool_executed",
+        "tool": "getWeekdayHourMatrix",
+        "toolUseId": "read-1",
+        "resourceIds": [
+          "hour.csv"
+        ],
+        "rows": 17379
+      },
+      {
+        "seq": 5,
+        "tMs": 6.2,
+        "kind": "tool_result",
+        "tool": "getWeekdayHourMatrix",
+        "toolUseId": "read-1",
+        "status": "success"
+      },
+      {
+        "seq": 6,
+        "tMs": 6.6,
+        "kind": "model_turn",
+        "status": "success",
+        "stopReason": "endTurn"
+      },
+      {
+        "seq": 7,
+        "tMs": 6.6,
+        "kind": "answer",
+        "text": "Tue at 17:00 averaged 544.3 rentals per observed hour (n = 104). This is the highest weekday–hour average in the selected period."
+      },
+      {
+        "seq": 8,
+        "tMs": 6.7,
+        "kind": "run_closed",
+        "status": "success",
+        "stopReason": "endTurn"
+      }
+    ],
+    "ledger": [
+      {
+        "tool": "getWeekdayHourMatrix",
+        "classifications": [
+          "public"
+        ],
+        "resourceIds": [
+          "hour.csv"
+        ]
+      }
+    ],
+    "result": {
+      "period": "both",
+      "points": [
+        {
+          "group": "Sat",
+          "hour": 0,
+          "mean": 94.30476190476188,
+          "n": 105
+        },
+        {
+          "group": "Sat",
+          "hour": 1,
+          "mean": 67.7809523809524,
+          "n": 105
+        },
+        {
+          "group": "Sat",
+          "hour": 2,
+          "mean": 50.4952380952381,
+          "n": 105
+        },
+        {
+          "group": "Sat",
+          "hour": 3,
+          "mean": 22.885714285714293,
+          "n": 105
+        },
+        {
+          "group": "Sat",
+          "hour": 4,
+          "mean": 7.657142857142857,
+          "n": 105
+        },
+        {
+          "group": "Sat",
+          "hour": 5,
+          "mean": 8.29126213592233,
+          "n": 103
+        },
+        {
+          "group": "Sat",
+          "hour": 6,
+          "mean": 21.00000000000001,
+          "n": 105
+        },
+        {
+          "group": "Sat",
+          "hour": 7,
+          "mean": 45.96190476190478,
+          "n": 105
+        },
+        {
+          "group": "Sat",
+          "hour": 8,
+          "mean": 114.4761904761905,
+          "n": 105
+        },
+        {
+          "group": "Sat",
+          "hour": 9,
+          "mean": 186.7904761904762,
+          "n": 105
+        },
+        {
+          "group": "Sat",
+          "hour": 10,
+          "mean": 263.72380952380956,
+          "n": 105
+        },
+        {
+          "group": "Sat",
+          "hour": 11,
+          "mean": 328.6095238095239,
+          "n": 105
+        },
+        {
+          "group": "Sat",
+          "hour": 12,
+          "mean": 375.3809523809524,
+          "n": 105
+        },
+        {
+          "group": "Sat",
+          "hour": 13,
+          "mean": 385.3714285714285,
+          "n": 105
+        },
+        {
+          "group": "Sat",
+          "hour": 14,
+          "mean": 381.3333333333333,
+          "n": 105
+        },
+        {
+          "group": "Sat",
+          "hour": 15,
+          "mean": 382.4285714285714,
+          "n": 105
+        },
+        {
+          "group": "Sat",
+          "hour": 16,
+          "mean": 366.142857142857,
+          "n": 105
+        },
+        {
+          "group": "Sat",
+          "hour": 17,
+          "mean": 334.4095238095238,
+          "n": 105
+        },
+        {
+          "group": "Sat",
+          "hour": 18,
+          "mean": 292.04807692307685,
+          "n": 104
+        },
+        {
+          "group": "Sat",
+          "hour": 19,
+          "mean": 239.93269230769235,
+          "n": 104
+        },
+        {
+          "group": "Sat",
+          "hour": 20,
+          "mean": 180.86538461538464,
+          "n": 104
+        },
+        {
+          "group": "Sat",
+          "hour": 21,
+          "mean": 156.00000000000003,
+          "n": 104
+        },
+        {
+          "group": "Sat",
+          "hour": 22,
+          "mean": 139.66346153846155,
+          "n": 104
+        },
+        {
+          "group": "Sat",
+          "hour": 23,
+          "mean": 115.85576923076921,
+          "n": 104
+        },
+        {
+          "group": "Sun",
+          "hour": 0,
+          "mean": 93.99038461538461,
+          "n": 104
+        },
+        {
+          "group": "Sun",
+          "hour": 1,
+          "mean": 77.4326923076923,
+          "n": 104
+        },
+        {
+          "group": "Sun",
+          "hour": 2,
+          "mean": 61.62745098039215,
+          "n": 102
+        },
+        {
+          "group": "Sun",
+          "hour": 3,
+          "mean": 31.14423076923077,
+          "n": 104
+        },
+        {
+          "group": "Sun",
+          "hour": 4,
+          "mean": 9.362745098039214,
+          "n": 102
+        },
+        {
+          "group": "Sun",
+          "hour": 6,
+          "mean": 14.495145631067956,
+          "n": 103
+        },
+        {
+          "group": "Sun",
+          "hour": 7,
+          "mean": 33.10476190476191,
+          "n": 105
+        },
+        {
+          "group": "Sun",
+          "hour": 8,
+          "mean": 83.85714285714286,
+          "n": 105
+        },
+        {
+          "group": "Sun",
+          "hour": 9,
+          "mean": 156.54285714285714,
+          "n": 105
+        },
+        {
+          "group": "Sun",
+          "hour": 10,
+          "mean": 258.5809523809524,
+          "n": 105
+        },
+        {
+          "group": "Sun",
+          "hour": 11,
+          "mean": 315.3809523809523,
+          "n": 105
+        },
+        {
+          "group": "Sun",
+          "hour": 12,
+          "mean": 372.96190476190475,
+          "n": 105
+        },
+        {
+          "group": "Sun",
+          "hour": 13,
+          "mean": 374.9333333333332,
+          "n": 105
+        },
+        {
+          "group": "Sun",
+          "hour": 14,
+          "mean": 363.6285714285713,
+          "n": 105
+        },
+        {
+          "group": "Sun",
+          "hour": 15,
+          "mean": 353.9333333333333,
+          "n": 105
+        },
+        {
+          "group": "Sun",
+          "hour": 16,
+          "mean": 355.3999999999999,
+          "n": 105
+        },
+        {
+          "group": "Sun",
+          "hour": 17,
+          "mean": 318.77142857142843,
+          "n": 105
+        },
+        {
+          "group": "Sun",
+          "hour": 18,
+          "mean": 272.62857142857166,
+          "n": 105
+        },
+        {
+          "group": "Sun",
+          "hour": 19,
+          "mean": 225.4761904761905,
+          "n": 105
+        },
+        {
+          "group": "Sun",
+          "hour": 20,
+          "mean": 168.0285714285714,
+          "n": 105
+        },
+        {
+          "group": "Sun",
+          "hour": 21,
+          "mean": 127.64761904761903,
+          "n": 105
+        },
+        {
+          "group": "Sun",
+          "hour": 22,
+          "mean": 94.12380952380951,
+          "n": 105
+        },
+        {
+          "group": "Sun",
+          "hour": 23,
+          "mean": 61.89523809523809,
+          "n": 105
+        },
+        {
+          "group": "Mon",
+          "hour": 0,
+          "mean": 34.00952380952381,
+          "n": 105
+        },
+        {
+          "group": "Mon",
+          "hour": 1,
+          "mean": 17.307692307692314,
+          "n": 104
+        },
+        {
+          "group": "Mon",
+          "hour": 4,
+          "mean": 5.7857142857142865,
+          "n": 98
+        },
+        {
+          "group": "Mon",
+          "hour": 5,
+          "mean": 21.653846153846157,
+          "n": 104
+        },
+        {
+          "group": "Mon",
+          "hour": 6,
+          "mean": 85.86538461538464,
+          "n": 104
+        },
+        {
+          "group": "Mon",
+          "hour": 7,
+          "mean": 248.53846153846146,
+          "n": 104
+        },
+        {
+          "group": "Mon",
+          "hour": 8,
+          "mean": 412.19230769230774,
+          "n": 104
+        },
+        {
+          "group": "Mon",
+          "hour": 9,
+          "mean": 218.4423076923077,
+          "n": 104
+        },
+        {
+          "group": "Mon",
+          "hour": 10,
+          "mean": 139.02884615384616,
+          "n": 104
+        },
+        {
+          "group": "Mon",
+          "hour": 11,
+          "mean": 163.69230769230774,
+          "n": 104
+        },
+        {
+          "group": "Mon",
+          "hour": 12,
+          "mean": 207.50961538461536,
+          "n": 104
+        },
+        {
+          "group": "Mon",
+          "hour": 13,
+          "mean": 205.61538461538458,
+          "n": 104
+        },
+        {
+          "group": "Mon",
+          "hour": 14,
+          "mean": 192.70192307692307,
+          "n": 104
+        },
+        {
+          "group": "Mon",
+          "hour": 15,
+          "mean": 202.36538461538456,
+          "n": 104
+        },
+        {
+          "group": "Mon",
+          "hour": 16,
+          "mean": 284.4519230769231,
+          "n": 104
+        },
+        {
+          "group": "Mon",
+          "hour": 17,
+          "mean": 502.3942307692306,
+          "n": 104
+        },
+        {
+          "group": "Mon",
+          "hour": 18,
+          "mean": 481.34615384615364,
+          "n": 104
+        },
+        {
+          "group": "Mon",
+          "hour": 19,
+          "mean": 344.57692307692315,
+          "n": 104
+        },
+        {
+          "group": "Mon",
+          "hour": 20,
+          "mean": 242.07692307692315,
+          "n": 104
+        },
+        {
+          "group": "Mon",
+          "hour": 21,
+          "mean": 174.53846153846152,
+          "n": 104
+        },
+        {
+          "group": "Mon",
+          "hour": 22,
+          "mean": 115.75961538461539,
+          "n": 104
+        },
+        {
+          "group": "Mon",
+          "hour": 23,
+          "mean": 65.40384615384616,
+          "n": 104
+        },
+        {
+          "group": "Tue",
+          "hour": 0,
+          "mean": 27.623762376237625,
+          "n": 101
+        },
+        {
+          "group": "Tue",
+          "hour": 1,
+          "mean": 12.54,
+          "n": 100
+        },
+        {
+          "group": "Tue",
+          "hour": 2,
+          "mean": 6.8019801980198,
+          "n": 101
+        },
+        {
+          "group": "Tue",
+          "hour": 4,
+          "mean": 5.13131313131313,
+          "n": 99
+        },
+        {
+          "group": "Tue",
+          "hour": 5,
+          "mean": 24.45544554455445,
+          "n": 101
+        },
+        {
+          "group": "Tue",
+          "hour": 6,
+          "mean": 106.5,
+          "n": 102
+        },
+        {
+          "group": "Tue",
+          "hour": 7,
+          "mean": 299.6960784313726,
+          "n": 102
+        },
+        {
+          "group": "Tue",
+          "hour": 8,
+          "mean": 471.78431372549016,
+          "n": 102
+        },
+        {
+          "group": "Tue",
+          "hour": 9,
+          "mean": 236.45098039215688,
+          "n": 102
+        },
+        {
+          "group": "Tue",
+          "hour": 10,
+          "mean": 129.22549019607845,
+          "n": 102
+        },
+        {
+          "group": "Tue",
+          "hour": 11,
+          "mean": 146.31372549019608,
+          "n": 102
+        },
+        {
+          "group": "Tue",
+          "hour": 12,
+          "mean": 182.77669902912632,
+          "n": 103
+        },
+        {
+          "group": "Tue",
+          "hour": 13,
+          "mean": 182.9903846153846,
+          "n": 104
+        },
+        {
+          "group": "Tue",
+          "hour": 14,
+          "mean": 168.36538461538467,
+          "n": 104
+        },
+        {
+          "group": "Tue",
+          "hour": 15,
+          "mean": 186.9038461538462,
+          "n": 104
+        },
+        {
+          "group": "Tue",
+          "hour": 16,
+          "mean": 286.70192307692304,
+          "n": 104
+        },
+        {
+          "group": "Tue",
+          "hour": 17,
+          "mean": 544.278846153846,
+          "n": 104
+        },
+        {
+          "group": "Tue",
+          "hour": 18,
+          "mean": 517.5673076923077,
+          "n": 104
+        },
+        {
+          "group": "Tue",
+          "hour": 19,
+          "mean": 353.92307692307696,
+          "n": 104
+        },
+        {
+          "group": "Tue",
+          "hour": 20,
+          "mean": 253.19230769230776,
+          "n": 104
+        },
+        {
+          "group": "Tue",
+          "hour": 21,
+          "mean": 186.23076923076917,
+          "n": 104
+        },
+        {
+          "group": "Tue",
+          "hour": 22,
+          "mean": 132.2788461538461,
+          "n": 104
+        },
+        {
+          "group": "Tue",
+          "hour": 23,
+          "mean": 76.17307692307692,
+          "n": 104
+        },
+        {
+          "group": "Wed",
+          "hour": 0,
+          "mean": 34.557692307692314,
+          "n": 104
+        },
+        {
+          "group": "Wed",
+          "hour": 1,
+          "mean": 15.336538461538463,
+          "n": 104
+        },
+        {
+          "group": "Wed",
+          "hour": 2,
+          "mean": 7.813725490196078,
+          "n": 102
+        },
+        {
+          "group": "Wed",
+          "hour": 4,
+          "mean": 4.968749999999998,
+          "n": 96
+        },
+        {
+          "group": "Wed",
+          "hour": 5,
+          "mean": 25.749999999999996,
+          "n": 104
+        },
+        {
+          "group": "Wed",
+          "hour": 6,
+          "mean": 107.80769230769229,
+          "n": 104
+        },
+        {
+          "group": "Wed",
+          "hour": 7,
+          "mean": 303.9807692307692,
+          "n": 104
+        },
+        {
+          "group": "Wed",
+          "hour": 8,
+          "mean": 488.32692307692326,
+          "n": 104
+        },
+        {
+          "group": "Wed",
+          "hour": 9,
+          "mean": 238.52884615384616,
+          "n": 104
+        },
+        {
+          "group": "Wed",
+          "hour": 10,
+          "mean": 131.89423076923077,
+          "n": 104
+        },
+        {
+          "group": "Wed",
+          "hour": 11,
+          "mean": 152.2019230769231,
+          "n": 104
+        },
+        {
+          "group": "Wed",
+          "hour": 12,
+          "mean": 193.90384615384608,
+          "n": 104
+        },
+        {
+          "group": "Wed",
+          "hour": 13,
+          "mean": 185.82692307692304,
+          "n": 104
+        },
+        {
+          "group": "Wed",
+          "hour": 14,
+          "mean": 170.5480769230769,
+          "n": 104
+        },
+        {
+          "group": "Wed",
+          "hour": 15,
+          "mean": 181.28846153846155,
+          "n": 104
+        },
+        {
+          "group": "Wed",
+          "hour": 16,
+          "mean": 272.9615384615383,
+          "n": 104
+        },
+        {
+          "group": "Wed",
+          "hour": 17,
+          "mean": 513.1442307692307,
+          "n": 104
+        },
+        {
+          "group": "Wed",
+          "hour": 18,
+          "mean": 494.02912621359235,
+          "n": 103
+        },
+        {
+          "group": "Wed",
+          "hour": 19,
+          "mean": 357.5048543689322,
+          "n": 103
+        },
+        {
+          "group": "Wed",
+          "hour": 20,
+          "mean": 256.6601941747573,
+          "n": 103
+        },
+        {
+          "group": "Wed",
+          "hour": 21,
+          "mean": 194.66990291262147,
+          "n": 103
+        },
+        {
+          "group": "Wed",
+          "hour": 22,
+          "mean": 143.68932038834959,
+          "n": 103
+        },
+        {
+          "group": "Wed",
+          "hour": 23,
+          "mean": 83.73786407766988,
+          "n": 103
+        },
+        {
+          "group": "Thu",
+          "hour": 0,
+          "mean": 39.27184466019418,
+          "n": 103
+        },
+        {
+          "group": "Thu",
+          "hour": 1,
+          "mean": 17.223300970873787,
+          "n": 103
+        },
+        {
+          "group": "Thu",
+          "hour": 2,
+          "mean": 9.15686274509804,
+          "n": 102
+        },
+        {
+          "group": "Thu",
+          "hour": 4,
+          "mean": 5.28,
+          "n": 100
+        },
+        {
+          "group": "Thu",
+          "hour": 5,
+          "mean": 25.912621359223298,
+          "n": 103
+        },
+        {
+          "group": "Thu",
+          "hour": 6,
+          "mean": 107.4368932038835,
+          "n": 103
+        },
+        {
+          "group": "Thu",
+          "hour": 7,
+          "mean": 304.7378640776698,
+          "n": 103
+        },
+        {
+          "group": "Thu",
+          "hour": 8,
+          "mean": 488.5728155339805,
+          "n": 103
+        },
+        {
+          "group": "Thu",
+          "hour": 9,
+          "mean": 240.87378640776697,
+          "n": 103
+        },
+        {
+          "group": "Thu",
+          "hour": 10,
+          "mean": 132.5631067961165,
+          "n": 103
+        },
+        {
+          "group": "Thu",
+          "hour": 11,
+          "mean": 158.83495145631068,
+          "n": 103
+        },
+        {
+          "group": "Thu",
+          "hour": 12,
+          "mean": 199.51456310679615,
+          "n": 103
+        },
+        {
+          "group": "Thu",
+          "hour": 13,
+          "mean": 196.4368932038835,
+          "n": 103
+        },
+        {
+          "group": "Thu",
+          "hour": 14,
+          "mean": 177.5631067961165,
+          "n": 103
+        },
+        {
+          "group": "Thu",
+          "hour": 15,
+          "mean": 196.4757281553398,
+          "n": 103
+        },
+        {
+          "group": "Thu",
+          "hour": 16,
+          "mean": 286.2980769230769,
+          "n": 104
+        },
+        {
+          "group": "Thu",
+          "hour": 17,
+          "mean": 527.3461538461539,
+          "n": 104
+        },
+        {
+          "group": "Thu",
+          "hour": 18,
+          "mean": 502.0961538461538,
+          "n": 104
+        },
+        {
+          "group": "Thu",
+          "hour": 19,
+          "mean": 358.4519230769231,
+          "n": 104
+        },
+        {
+          "group": "Thu",
+          "hour": 20,
+          "mean": 268.9134615384616,
+          "n": 104
+        },
+        {
+          "group": "Thu",
+          "hour": 21,
+          "mean": 197.88461538461542,
+          "n": 104
+        },
+        {
+          "group": "Thu",
+          "hour": 22,
+          "mean": 147.24038461538456,
+          "n": 104
+        },
+        {
+          "group": "Thu",
+          "hour": 23,
+          "mean": 96.75000000000003,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 0,
+          "mean": 52.43269230769227,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 1,
+          "mean": 24.721153846153854,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 2,
+          "mean": 12.740384615384617,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 4,
+          "mean": 6.072164948453606,
+          "n": 97
+        },
+        {
+          "group": "Fri",
+          "hour": 5,
+          "mean": 23.903846153846168,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 6,
+          "mean": 90.02884615384617,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 7,
+          "mean": 254.32692307692315,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 8,
+          "mean": 462.278846153846,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 9,
+          "mean": 258.9903846153846,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 10,
+          "mean": 157.73076923076925,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 11,
+          "mean": 188.11538461538464,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 12,
+          "mean": 237.64423076923077,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 13,
+          "mean": 241.47115384615378,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 14,
+          "mean": 229.36538461538467,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 15,
+          "mean": 252.46153846153842,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 16,
+          "mean": 330.9903846153845,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 17,
+          "mean": 492.41346153846155,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 18,
+          "mean": 420.9903846153845,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 19,
+          "mean": 302.0673076923076,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 20,
+          "mean": 213.32692307692298,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 21,
+          "mean": 169.875,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 22,
+          "mean": 147.0673076923077,
+          "n": 104
+        },
+        {
+          "group": "Fri",
+          "hour": 23,
+          "mean": 115.21153846153848,
+          "n": 104
+        },
+        {
+          "group": "Sun",
+          "hour": 5,
+          "mean": 8.693877551020405,
+          "n": 98
+        },
+        {
+          "group": "Mon",
+          "hour": 2,
+          "mean": 10.313131313131311,
+          "n": 99
+        },
+        {
+          "group": "Mon",
+          "hour": 3,
+          "mean": 5.1134020618556715,
+          "n": 97
+        },
+        {
+          "group": "Thu",
+          "hour": 3,
+          "mean": 5.071428571428571,
+          "n": 98
+        },
+        {
+          "group": "Fri",
+          "hour": 3,
+          "mean": 6.598039215686275,
+          "n": 102
+        },
+        {
+          "group": "Tue",
+          "hour": 3,
+          "mean": 4.152173913043479,
+          "n": 92
+        },
+        {
+          "group": "Wed",
+          "hour": 3,
+          "mean": 4.8888888888888875,
+          "n": 99
+        }
+      ],
+      "n": 17379,
+      "answer": "Tue at 17:00 averaged 544.3 rentals per observed hour (n = 104). This is the highest weekday–hour average in the selected period."
+    },
+    "finalText": "Tue at 17:00 averaged 544.3 rentals per observed hour (n = 104). This is the highest weekday–hour average in the selected period.",
+    "outcome": {
+      "status": "ok"
+    },
+    "usage": null,
+    "elapsedMs": 6.7
+  },
+  {
+    "contractVersion": "lab-run/v1",
+    "runId": "week-both-0",
+    "lesson": "analytics",
+    "scenario": "week",
+    "tier": "replay",
+    "provider": {
+      "kind": "scripted",
+      "modelId": "scripted-control-v1"
+    },
+    "sdkVersion": "1.24.0",
+    "recordedAt": "2026-11-09T17:14:19.326Z",
+    "caller": null,
+    "prompt": "Which weekday and hour see the most rentals?",
+    "events": [
+      {
+        "seq": 0,
+        "tMs": 0.2,
+        "kind": "request",
+        "text": "Which weekday and hour see the most rentals?"
+      },
+      {
+        "seq": 1,
+        "tMs": 0.4,
+        "kind": "model_turn",
+        "status": "success",
+        "stopReason": "toolUse"
+      },
+      {
+        "seq": 2,
+        "tMs": 0.4,
+        "kind": "tool_requested",
+        "tool": "getWeekdayHourMatrix",
+        "toolUseId": "read-1",
+        "input": {
+          "period": "both"
+        }
+      },
+      {
+        "seq": 3,
+        "tMs": 0.4,
+        "kind": "gate",
+        "tool": "getWeekdayHourMatrix",
+        "toolUseId": "read-1",
+        "decision": "deny",
+        "stage": "budget",
+        "code": "READ_BUDGET_EXHAUSTED"
+      },
+      {
+        "seq": 4,
+        "tMs": 0.5,
+        "kind": "tool_result",
+        "tool": "getWeekdayHourMatrix",
+        "toolUseId": "read-1",
+        "status": "error"
+      },
+      {
+        "seq": 5,
+        "tMs": 0.6,
+        "kind": "model_turn",
+        "status": "success",
+        "stopReason": "endTurn"
+      },
+      {
+        "seq": 6,
+        "tMs": 0.6,
+        "kind": "answer",
+        "text": "The data request was blocked. No chart was produced."
+      },
+      {
+        "seq": 7,
+        "tMs": 0.7,
+        "kind": "run_closed",
+        "status": "success",
+        "stopReason": "endTurn"
+      }
+    ],
+    "ledger": [],
+    "result": null,
+    "finalText": "The data request was blocked. No chart was produced.",
+    "outcome": {
+      "status": "denied",
+      "code": "READ_BUDGET_EXHAUSTED"
+    },
+    "usage": null,
+    "elapsedMs": 0.7
+  }
+]

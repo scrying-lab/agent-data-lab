@@ -1,0 +1,34 @@
+apiVersion: gateway.api-platform.wso2.com/v1
+kind: LlmProvider
+metadata:
+  name: lab-bedrock
+spec:
+  displayName: Agent Data Lab Bedrock
+  version: v1.0
+  template: awsbedrock
+  context: /bedrock
+  upstream:
+    url: https://bedrock-runtime.us-east-1.amazonaws.com
+  accessControl:
+    mode: deny_all
+    exceptions:
+      - path: /model/{modelId}/converse-stream
+        methods: [POST]
+  policies:
+    - name: api-key-auth
+      version: v1
+      paths:
+        - path: /model/{modelId}/converse-stream
+          methods: [POST]
+          params:
+            key: X-API-Key
+            in: header
+    - name: aws-authentication
+      version: v0
+      paths:
+        - path: /model/{modelId}/converse-stream
+          methods: [POST]
+          params:
+            service: bedrock
+            region: us-east-1
+            authenticationType: default-credential-chain

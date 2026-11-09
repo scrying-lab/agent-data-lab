@@ -1,0 +1,9 @@
+// The page shell: layout, the two lessons and the run controller the playground plugs into.
+export { useLessonRun, type LessonRunController } from './useLessonRun'
+export { GovernanceLesson, GOVERNANCE_ID } from './GovernanceLesson'
+export { AnalyticsLesson, ANALYTICS_ID } from './AnalyticsLesson'
+export { ResultCard, RUN_FOR_REAL_ID, denialsOf, productionNote } from './ResultCard'
+export { SiteHeader, Hero, LabelGuide, Credits, SiteFooter, LAB_ID } from './Frame'
+export { ThemeControl } from './ThemeControl'
+export { applyTheme, readStoredTheme, storeTheme, themes, THEME_KEY, type Theme } from './theme'
+export * from './data'

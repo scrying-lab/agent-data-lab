@@ -1,0 +1,73 @@
+# Publishes the static site to GitHub Pages.
+#
+# In plain terms: when the published branch changes (or someone presses "Run workflow"),
+# a clean machine first runs every check in check.yml (typecheck, lint, unit tests, build,
+# browser tests, secret scans). Only if all of them pass is the site built and handed to
+# GitHub Pages. A red build never reaches the live site, and this does not depend on any
+# repository setting. The site is static files only, so once deployed it keeps working
+# with no server and no scheduled jobs.
+#
+# Pins and permissions follow the same rules as check.yml.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+# One deployment at a time; a newer push waits rather than cancelling one in flight.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Run every check before deploying
+    uses: ./.github/workflows/check.yml
+    permissions:
+      contents: read
+
+  build:
+    name: Build the static site
+    needs: check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node from .nvmrc
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install and build (the build includes the bundle check)
+        run: npm ci && npm run build
+
+      - name: Upload the site for Pages
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

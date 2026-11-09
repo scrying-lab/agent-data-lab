@@ -1,0 +1,158 @@
+/* Lesson panels. Colours, fonts, borders and shadows come only from src/tokens.css.
+   Editorial + modern brutalism: 2px rules, square corners, a solid offset shadow on raised panels. */
+
+.lsn-panel {
+  border: var(--border-width) solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--rule);
+  padding: clamp(16px, 3vw, 32px);
+  min-width: 0;
+}
+.lsn-panel + .lsn-panel { margin-top: 32px; }
+
+.lsn-panel h2,
+.lsn-panel h3 {
+  font-family: var(--font-display);
+  font-weight: normal;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.lsn-panel h2 { font-size: clamp(1.6rem, 5vw, 2.4rem); line-height: 1.1; margin: 0 0 12px; }
+.lsn-panel h3 { font-size: clamp(1.25rem, 3.5vw, 1.6rem); line-height: 1.2; margin: 0 0 8px; }
+.lsn-panel h4 { font: 600 0.75rem/1.4 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 6px; }
+.lsn-panel p { line-height: 1.55; margin: 0 0 12px; max-width: 70ch; }
+.lsn-panel a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
+.lsn-panel a:focus-visible,
+.lsn-panel button:focus-visible,
+.lsn-code:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.lsn-panel code { font-family: var(--font-mono); font-size: 0.9em; overflow-wrap: anywhere; }
+
+.lsn-kicker {
+  display: block;
+  font: 600 0.72rem/1.4 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 6px;
+}
+.lsn-muted { color: var(--ink-muted); }
+
+/* Badges carry text; none of them means an outcome. */
+.lsn-badge {
+  border: var(--border-width) solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  font: 600 0.75rem/1.3 var(--font-mono);
+  padding: 2px 8px;
+  white-space: normal;
+}
+
+.lsn-button {
+  min-height: 44px;
+  border: var(--border-width) solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--brand-yellow);
+  color: var(--brand-yellow-ink);
+  font: 600 0.85rem/1.2 var(--font-mono);
+  box-shadow: 3px 3px 0 var(--rule);
+  padding: 8px 14px;
+}
+.lsn-button:hover { background: var(--brand-yellow); color: var(--brand-yellow-ink); }
+.lsn-button:active { box-shadow: none; }
+
+.lsn-trigger {
+  min-height: 44px;
+  border: var(--border-width) solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.85rem/1.3 var(--font-mono);
+  padding: 8px 14px;
+  white-space: normal;
+  text-align: left;
+  height: auto;
+}
+.lsn-trigger:hover { background: var(--surface); color: var(--ink); }
+.lsn-trigger[data-state="open"] .lsn-chevron { transform: rotate(90deg); }
+
+/* Code blocks: scrollable, focusable regions so keyboard users can scroll them. */
+.lsn-code {
+  border: var(--border-width) solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  overflow: auto;
+  max-height: 28rem;
+}
+.lsn-code pre { margin: 0; padding: 12px; font: 0.8rem/1.5 var(--font-mono); white-space: pre; }
+.lsn-code code { overflow-wrap: normal; font-size: 1em; }
+
+/* Python left, TypeScript right; stacked under 768px. */
+.lsn-pair { border-top: var(--border-width) solid var(--rule); padding-top: 20px; margin-top: 24px; }
+.lsn-pair-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; }
+.lsn-columns { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 12px; }
+@media (min-width: 768px) {
+  .lsn-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.lsn-gotchas { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 12px; }
+.lsn-gotchas li { border: var(--border-width) solid var(--rule); padding: 12px; background: var(--paper); }
+.lsn-gotchas dl { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; margin: 8px 0 0; }
+.lsn-gotchas dt { font: 600 0.72rem/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; }
+.lsn-gotchas dd { margin: 0 0 6px; }
+
+/* Elsewhere */
+.lsn-concepts { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 20px; }
+.lsn-concept { border: var(--border-width) solid var(--rule); padding: 16px; background: var(--paper); min-width: 0; }
+.lsn-vendors { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px 16px; margin: 12px 0; }
+@media (min-width: 768px) {
+  .lsn-vendors { grid-template-columns: 11rem minmax(0, 1fr); }
+}
+.lsn-vendor-row { display: contents; }
+.lsn-vendors dt { font: 600 0.75rem/1.5 var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; }
+.lsn-vendors dd { margin: 0 0 8px; }
+.lsn-unconfirmed { font-style: italic; color: var(--ink-muted); }
+.lsn-sources { margin: 0; padding-left: 1.25rem; font-size: 0.85rem; }
+.lsn-sources li { margin-bottom: 4px; }
+
+/* Run it for real */
+.lsn-run { padding: 16px; }
+.lsn-run h2 { font-size: clamp(1.3rem, 4vw, 1.7rem); }
+.lsn-commands { display: grid; gap: 8px; margin: 12px 0; }
+.lsn-disclosure { margin: 12px 0; }
+
+/* Lesson guide */
+.lsn-prediction {
+  border: var(--border-width) solid var(--rule);
+  background: var(--brand-yellow);
+  color: var(--brand-yellow-ink);
+  padding: 12px 16px;
+  margin: 16px 0;
+}
+.lsn-prediction .lsn-kicker,
+.lsn-panel .lsn-prediction h3 { color: var(--brand-yellow-ink); margin: 0 0 4px; font: 600 0.72rem/1.4 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
+.lsn-prediction p { margin: 0; font-family: var(--font-display); font-size: 1.15rem; }
+.lsn-routes { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 768px) {
+  .lsn-routes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.lsn-routes ol { margin: 0; padding-left: 1.25rem; }
+.lsn-routes li { margin-bottom: 8px; line-height: 1.5; }
+.lsn-pointers { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+
+/* Compare models */
+.lsn-compare-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 768px) {
+  .lsn-compare-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.lsn-compare-col { border: var(--border-width) solid var(--rule); padding: 16px; min-width: 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .lsn-chevron { transition: transform 120ms ease-out; }
+}

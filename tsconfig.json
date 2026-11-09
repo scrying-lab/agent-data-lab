@@ -1,0 +1,47 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@observablehq/plot": [
+        "./node_modules/@observablehq/plot/src/index.d.ts"
+      ]
+    },
+    "types": [
+      "node",
+      "vite/client"
+    ]
+  },
+  "include": [
+    "src",
+    "analytics",
+    "agent",
+    "scripts",
+    "playwright.config.ts",
+    "eslint.config.js",
+    "governance",
+    "content",
+    "examples",
+    "evaluation",
+    "lab.config.ts",
+    "tests",
+    "vite.config.ts"
+  ]
+}

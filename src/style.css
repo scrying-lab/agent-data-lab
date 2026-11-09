@@ -1,0 +1,86 @@
+/*
+  Base layer. Colours, fonts, borders and shadows come only from src/tokens.css (imported first in
+  src/main.tsx); this file holds no colour values of its own. Page layout lives in src/shell/shell.css.
+*/
+@import "tailwindcss";
+
+/* shadcn component colours, mapped onto the lab's tokens so light and dark both follow tokens.css. */
+@theme inline {
+  --color-background: var(--paper);
+  --color-foreground: var(--ink);
+  --color-primary: var(--ink);
+  --color-primary-foreground: var(--paper);
+  --color-secondary: var(--surface);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--surface);
+  --color-muted-foreground: var(--ink-muted);
+  --color-accent: var(--surface);
+  --color-accent-foreground: var(--ink);
+  --color-border: var(--rule);
+  --color-input: var(--rule);
+  --color-ring: var(--focus);
+  --color-destructive: var(--outcome-failed);
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius);
+}
+
+html {
+  background: var(--paper);
+  color: var(--ink);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 1rem/1.6 var(--font-body);
+  overflow-wrap: break-word;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+code, pre, kbd, samp { font-family: var(--font-mono); }
+
+/* Links are underlined everywhere, so they never depend on colour alone. */
+a { color: var(--link); text-decoration: underline; text-underline-offset: 0.18em; }
+
+/* One visible focus ring for everything a keyboard can reach. */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

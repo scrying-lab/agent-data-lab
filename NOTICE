@@ -1,0 +1,72 @@
+Agent Data Lab
+Copyright (c) 2026 Ian Mitchell
+
+Code: MIT licence (see LICENSE).
+Written lessons and documentation: CC BY 4.0 (see LICENSE-DOCS.md).
+
+This project includes or is built with the third-party material below. Each item keeps
+its own licence. Licence identifiers were checked against each package's package.json
+in the installed dependency tree at the versions shown.
+
+------------------------------------------------------------------------------
+DATA
+------------------------------------------------------------------------------
+
+Bike Sharing dataset (data/hour.csv), included unmodified
+  Fanaee-T, H. (2013). Bike Sharing [Dataset]. UCI Machine Learning Repository.
+  https://doi.org/10.24432/C5W894
+  Licence: Creative Commons Attribution 4.0 International (CC BY 4.0)
+  https://creativecommons.org/licenses/by/4.0/
+  Original research: Hadi Fanaee-T and Joao Gama, "Event labeling combining
+  ensemble detectors and background knowledge".
+  The lab computes its own grouped summaries (mean rentals and observed hours)
+  from the unmodified file.
+
+------------------------------------------------------------------------------
+SOFTWARE SHIPPED IN THE SITE
+------------------------------------------------------------------------------
+
+@strands-agents/sdk 1.24.0 ........ Apache-2.0
+react, react-dom 19.3.1 ........... MIT    Copyright (c) Meta Platforms, Inc. and affiliates.
+@xyflow/react 12.12.1 ............. MIT    Copyright (c) 2019-2025 webkid GmbH
+@observablehq/plot 0.6.19 ......... ISC    Copyright 2020-2025 Observable, Inc.
+radix-ui 1.8.1 .................... MIT    Copyright (c) 2022 WorkOS
+shadcn/ui components (vendored) ... MIT    Copyright (c) 2023 shadcn
+                                           Full notice: docs/shadcn-LICENSE.txt
+zod 4.6.7 ......................... MIT    Copyright (c) 2025 Colin McDonnell
+arquero 8.0.3 ..................... BSD-3-Clause
+                                           Copyright (c) 2020-2024, UW Interactive Data Lab
+lucide-react 0.577.0 .............. ISC    Portions copyright Cole Bemis (Feather, MIT);
+                                           all other copyright Lucide Contributors.
+CodeMirror (@codemirror/commands 6.11.1, @codemirror/lang-javascript 6.2.5,
+  @codemirror/state 6.7.6, @codemirror/view 6.43.15) ... MIT
+                                           Copyright (C) 2018-2021 Marijn Haverbeke and others
+json5 2.2.3 ....................... MIT    Copyright (c) 2012-2018 Aseem Kishore, and others
+class-variance-authority 0.7.1 .... Apache-2.0
+clsx 2.1.1 ........................ MIT    Copyright (c) Luke Edwards
+tailwind-merge 3.7.0 .............. MIT    Copyright (c) 2021 Dany Castillo
+
+The list above names the project's direct dependencies only. The built site also
+bundles packages that they depend on, for example the d3 modules used by Observable
+Plot (ISC; d3-ease is BSD-3-Clause), robust-predicates (Unlicense), tslib (0BSD), and
+whichever of the Strands SDK's own dependencies (several Apache-2.0) the browser build
+keeps. Across the whole production dependency tree the licences are MIT, ISC,
+Apache-2.0, BSD-3-Clause, 0BSD and Unlicense; package-lock.json records the licence
+of every package.
+
+The full licence text of each package is distributed with that package's source.
+Note: the hosted site does not yet serve this file or those licence texts alongside
+its JavaScript. Doing so is a release requirement in docs/releasing.md.
+
+------------------------------------------------------------------------------
+WORKSHOP MATERIAL
+------------------------------------------------------------------------------
+
+AWS sample notebooks: sample-strands-agents-hands-on-workshop
+  https://github.com/aws-samples/sample-strands-agents-hands-on-workshop
+  Licence: MIT-0. Any Python excerpts adapted from these notebooks are used under MIT-0.
+
+The AWS Houston User Group Strands Agents workshop and the WSO2 AI gateway session
+are credited as inspiration. No slides from either are included. The WSO2 gateway
+distribution is not part of this repository; infra/wso2/ holds only this project's
+own configuration for it.

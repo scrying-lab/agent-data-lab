@@ -1,0 +1,71 @@
+# Checks that the links in the project's documents still work.
+#
+# In plain terms: the README, the docs, the changelog and the agent guide point readers
+# at the hosted lab, the article and outside references. This job follows every link and
+# fails if one is broken, so a stale link is caught on the pull request that touches it
+# or on the next push to the published branch. Rules for what is skipped live in lychee.toml.
+#
+# lychee is run as a plain binary, pinned and checksum verified, so this workflow needs no
+# third-party action. There is deliberately no schedule.
+name: Links
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: links-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The checksum below matches the release's .sha256 file and the digest GitHub records for the asset.
+  LYCHEE_VERSION: 0.24.2
+  LYCHEE_SHA256: 73657a111819a30c47c08352896796f23d64e4eb2b3ed39b6d32149241566fc5
+
+jobs:
+  links:
+    name: Check links in Markdown
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install lychee (pinned version, checksum verified)
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          tarball="lychee-x86_64-unknown-linux-musl.tar.gz"
+          curl -fsSLO "https://github.com/lycheeverse/lychee/releases/download/lychee-v${LYCHEE_VERSION}/${tarball}"
+          echo "${LYCHEE_SHA256}  ${tarball}" | sha256sum -c -
+          mkdir -p lychee-unpacked lychee-bin
+          tar -xzf "$tarball" -C lychee-unpacked
+          find lychee-unpacked -type f -name lychee -exec install -m 0755 {} lychee-bin/lychee \;
+          echo "$RUNNER_TEMP/lychee-bin" >> "$GITHUB_PATH"
+
+      - name: Check links
+        env:
+          # Read-only token so github.com links are not rate limited.
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Tracked files only. CHANGELOG.md and AGENTS.md are checked once they exist.
+          mapfile -t files < <(git ls-files -- README.md CHANGELOG.md AGENTS.md 'docs/*.md')
+          if [[ ! " ${files[*]} " == *" README.md "* ]]; then
+            echo "::error::README.md is missing"
+            exit 1
+          fi
+          printf 'Checking %s\n' "${files[@]}"
+          lychee --version
+          lychee --config lychee.toml --no-progress "${files[@]}"
