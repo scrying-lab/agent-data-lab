@@ -6,6 +6,7 @@ import { configureLogging } from '@strands-agents/sdk'
 import { evalResultsSchema, type EvalResults } from '../agent/run-contract'
 import { cases, computeInputsHash, installedSdkVersion, runEvaluation } from '../evaluation/cases'
 import type * as Policy from '../governance/policy'
+import { importedPackages, lockedClosure, readLockfile } from '../evaluation/inputs'
 
 const stored: EvalResults = evalResultsSchema.parse(JSON.parse(readFileSync(new URL('../evaluation/results.json', import.meta.url), 'utf8')))
 
@@ -59,9 +60,36 @@ describe('stored evaluation results (evaluation/results.json)', () => {
     expect(stored.cases.find(c => c.id === 'M-04')?.observed.ledgerSize).toBe(1)
     expect(stored.cases.find(c => c.id === 'F-01')?.observed.decisions).toEqual([])
   })
-  it('the stored inputsHash matches the current gate, runner, cases and lockfile', () => {
+  it('the stored inputsHash matches the current gate, runner, cases and the locked packages they load', () => {
     expect(stored.inputsHash, 'stale: run node --import tsx evaluation/run.ts').toBe(computeInputsHash())
     expect(stored.sdkVersion).toBe(installedSdkVersion())
+  })
+})
+
+describe('what the inputsHash covers', () => {
+  const lock = readLockfile()
+  const packages = importedPackages()
+  const closure = lockedClosure(lock, packages).map(([key]) => key)
+  // Bump one locked entry's version and integrity, leaving everything else as it is.
+  const bump = (key: string) => ({ packages: { ...lock.packages, [key]: { ...lock.packages[key], version: '999.0.0', integrity: 'sha512-changed' } } })
+
+  it('covers the agent SDK, the schema library and the data library, and what they depend on', () => {
+    for (const name of ['@strands-agents/sdk', 'zod', 'arquero']) expect(closure, name).toContain(`node_modules/${name}`)
+    expect(closure.length).toBeGreaterThan(packages.length)
+  })
+  it('leaves out page-only packages the evaluation never loads', () => {
+    for (const name of ['lucide-react', 'react', 'react-dom', '@observablehq/plot', '@codemirror/view', '@xyflow/react']) {
+      expect(closure, name).not.toContain(`node_modules/${name}`)
+    }
+  })
+  it('does not change when a page-only package is updated', () => {
+    expect(computeInputsHash(bump('node_modules/lucide-react'), packages)).toBe(computeInputsHash(lock, packages))
+  })
+  it('changes when the SDK or anything it depends on is updated', () => {
+    const transitive = closure.find(key => !packages.some(name => key === `node_modules/${name}`))!
+    for (const key of ['node_modules/@strands-agents/sdk', transitive]) {
+      expect(computeInputsHash(bump(key), packages), key).not.toBe(computeInputsHash(lock, packages))
+    }
   })
 })
 

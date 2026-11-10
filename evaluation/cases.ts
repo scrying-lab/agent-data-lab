@@ -14,7 +14,6 @@
 // - Every case also gets the shared checks in `sharedChecks`: no side effects (the synthetic data
 //   fingerprint is unchanged), no raw error text, and an honest tier label.
 // - Node-only (reads files, hashes data). Never import this from browser code.
-import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { BeforeToolCallEvent } from '@strands-agents/sdk'
 import type { ColumnTable } from 'arquero'
@@ -22,6 +21,7 @@ import { findPreset, runGoverned, runPreset } from '../agent/governed-run'
 import { createSimulatedModel } from '../agent/model-factory'
 import type { PlaygroundRequest } from '../agent/playground-model'
 import { recordRun } from '../agent/run'
+import { computeInputsHash } from './inputs'
 import {
   LAB_EVAL_VERSION, evalCategories, evalResultsSchema, modelText, runSchema, tierLabel,
   type Code, type EvalResults, type LabRun, type Stage,
@@ -66,6 +66,8 @@ export type EvalCase = Readonly<{
 }>
 
 // ---- Running ----
+
+export { computeInputsHash } from './inputs'
 
 const ROOT = new URL('..', import.meta.url)
 const SCRIPTED_LABEL = 'Recorded replay'
@@ -692,16 +694,6 @@ async function evaluateCase(c: EvalCase): Promise<CaseResult> {
 }
 
 /** Files whose change makes stored results stale. Line endings are normalised so a checkout on any OS hashes the same. */
-export const hashedInputs = ['governance/policy.ts', 'agent/governed-run.ts', 'evaluation/cases.ts', 'package-lock.json'] as const
-
-export function computeInputsHash(): string {
-  const hash = createHash('sha256')
-  for (const file of hashedInputs) {
-    hash.update(file + '\0').update(readFileSync(new URL(file, ROOT), 'utf8').replace(/\r\n/g, '\n')).update('\0')
-  }
-  return hash.digest('hex')
-}
-
 /** The Strands SDK version actually installed, read from its own package.json. */
 export function installedSdkVersion(): string {
   const pkg = JSON.parse(readFileSync(new URL('node_modules/@strands-agents/sdk/package.json', ROOT), 'utf8')) as { version: string }

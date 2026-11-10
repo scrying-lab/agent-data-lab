@@ -14,6 +14,18 @@ or recorded live run. Nothing is called live unless a real model produced it.
 Planned for later releases: live recordings on Amazon Bedrock with two models side by side, a third
 editable block for the analytics lesson, and a verified WSO2 gateway experiment.
 
+## [1.1.2] - 2026-11-09
+
+Nothing on the page changes. This release is for people working on the code.
+
+### Changed
+
+- **For developers: dependency updates that cannot affect the evaluation no longer mark its saved
+  results out of date.** The saved results now record only the locked packages the evaluation
+  actually loads (the Strands SDK, Zod, Arquero and everything they depend on), not the whole
+  lockfile, so an update to a page-only library such as the icons can pass the checks on its own.
+  Every check still re-runs all evaluation cases (`evaluation/inputs.ts`, `tests/eval.test.ts`).
+
 ## [1.1.1] - 2026-11-09
 
 ### Changed
