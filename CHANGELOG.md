@@ -14,6 +14,16 @@ or recorded live run. Nothing is called live unless a real model produced it.
 Planned for later releases: live recordings on Amazon Bedrock with two models side by side, a third
 editable block for the analytics lesson, and a verified WSO2 gateway experiment.
 
+## [1.1.1] - 2026-11-09
+
+### Changed
+
+- The icon library is updated to lucide-react 1.70. Two icons draw their tick slightly
+  differently (the check in a circle and in a square); nothing else on the page changes
+  (`package.json`, `NOTICE`).
+- Dependabot no longer proposes major updates of Node's type definitions, which follow the
+  Node version the lab runs on (`.github/dependabot.yml`).
+
 ## [1.1.0] - 2026-11-09
 
 A design pass for readability in light and dark. The lesson text, what each label means, the

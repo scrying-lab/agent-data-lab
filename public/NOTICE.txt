@@ -36,8 +36,8 @@ shadcn/ui components (vendored) ... MIT    Copyright (c) 2023 shadcn
 zod 4.6.7 ......................... MIT    Copyright (c) 2025 Colin McDonnell
 arquero 8.0.3 ..................... BSD-3-Clause
                                            Copyright (c) 2020-2024, UW Interactive Data Lab
-lucide-react 0.577.0 .............. ISC    Portions copyright Cole Bemis (Feather, MIT);
-                                           all other copyright Lucide Contributors.
+lucide-react 1.70.0 ............... ISC    Portions copyright Cole Bemis (Feather, MIT);
+                                           all other copyright Lucide Icons and Contributors.
 CodeMirror (@codemirror/commands 6.11.1, @codemirror/lang-javascript 6.2.5,
   @codemirror/language 6.13.1, @codemirror/state 6.7.6, @codemirror/view 6.43.15,
   @lezer/highlight 1.2.5) ... MIT

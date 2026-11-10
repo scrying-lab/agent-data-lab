@@ -1,6 +1,6 @@
 {
   "name": "agent-data-lab",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "type": "module",
   "engines": {
@@ -37,7 +37,7 @@
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "json5": "2.2.3",
-    "lucide-react": "0.577.0",
+    "lucide-react": "1.70.0",
     "radix-ui": "1.8.1",
     "react": "19.3.1",
     "react-dom": "19.3.1",
