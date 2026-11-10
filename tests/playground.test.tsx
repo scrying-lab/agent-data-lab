@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { tierLabel, type LabRun } from '../agent/run-contract'
-import { applyChip, defaultExpected, playgroundBlocks, textsWith, type BlockId, type ExpectedOutcome } from '../content/block-hints'
+import { applyChip, defaultExpected, describeExpected, playgroundBlocks, textsWith, type BlockId, type ExpectedOutcome } from '../content/block-hints'
 import { parseAll, parseBlock, stripComments } from '../src/playground/parse'
 import { createPlaygroundRunner, loadAgentRuntime, promptFor, type AgentRuntime } from '../src/playground/runner'
 import { Playground } from '../src/playground/Playground'
@@ -219,6 +221,8 @@ describe('runner (src/playground/runner.ts) with the real Strands loop and gate'
 })
 
 describe('<Playground />', () => {
+  /** The outcome word in the result card only; the presets table shows outcome badges too. */
+  const RESULT_WORD = { selector: '.pg-result .lab-outcome__word' }
   const editorFor = (title: string) => screen.getByRole('textbox', { name: `${title} (editable data)` }) as HTMLTextAreaElement
 
   it('renders the section, both blocks, hints and chips; Run with defaults shows Allowed, 41250 and one tier label', async () => {
@@ -234,7 +238,7 @@ describe('<Playground />', () => {
     expect(screen.getAllByRole('button', { name: /^Try / })).toHaveLength(6)
 
     fireEvent.click(screen.getByRole('button', { name: 'Run' }))
-    await screen.findByText('Allowed')
+    await screen.findByText('Allowed', RESULT_WORD)
     expect(screen.getAllByText(/41250/).length).toBeGreaterThan(0)
     expect(screen.getAllByText('Simulated in your browser')).toHaveLength(1)
     expect(announce).toHaveBeenCalledWith('Running…')
@@ -247,7 +251,7 @@ describe('<Playground />', () => {
     render(<Playground loadEditor={noEditor} />)
     fireEvent.click(screen.getByRole('button', { name: 'Try guest' }))
     fireEvent.click(screen.getByRole('button', { name: 'Run' }))
-    await screen.findByText('Refused')
+    await screen.findByText('Refused', RESULT_WORD)
     expect(screen.getByText('Stopped at caller · TOOL_NOT_GRANTED')).toBeTruthy()
     expect(screen.getByText('A production app would show people one neutral message, so the cause cannot leak.')).toBeTruthy()
     expect(screen.getByText('What the model was told')).toBeTruthy()
@@ -291,7 +295,7 @@ describe('<Playground />', () => {
   it('Ctrl+Enter inside an editor runs', async () => {
     render(<Playground loadEditor={noEditor} />)
     fireEvent.keyDown(editorFor('What the simulated model asks for'), { key: 'Enter', ctrlKey: true })
-    await screen.findByText('Allowed')
+    await screen.findByText('Allowed', RESULT_WORD)
   })
 
   it('a stale run’s result never replaces a newer one', async () => {
@@ -310,11 +314,11 @@ describe('<Playground />', () => {
     await waitFor(() => expect(calls).toBe(1))
     fireEvent.click(screen.getByRole('button', { name: 'Reset this block: Who is asking' }))
     fireEvent.click(screen.getByRole('button', { name: 'Run' })) // second: defaults
-    await screen.findByText('Allowed')
+    await screen.findByText('Allowed', RESULT_WORD)
     await act(async () => { release(); await new Promise(resolve => setTimeout(resolve, 20)) })
-    expect(screen.getByText('Allowed')).toBeTruthy()
-    expect(screen.queryByText('Refused')).toBeNull()
-    expect(screen.queryByText('Cancelled')).toBeNull()
+    expect(screen.getByText('Allowed', RESULT_WORD)).toBeTruthy()
+    expect(screen.queryByText('Refused', RESULT_WORD)).toBeNull()
+    expect(screen.queryByText('Cancelled', RESULT_WORD)).toBeNull()
     expect(onRun).toHaveBeenCalledTimes(1)
     expect(onRun.mock.calls[0][0].caller).toEqual({ role: 'rider-support' })
   })
@@ -328,7 +332,7 @@ describe('<Playground />', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Run' }))
     fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }))
     release()
-    await screen.findByText('Cancelled')
+    await screen.findByText('Cancelled', RESULT_WORD)
     expect(screen.getByRole('button', { name: 'Retry' })).toBeTruthy()
     expect(announce).toHaveBeenCalledWith('Cancelled. The run was stopped before it finished.')
   })
@@ -349,14 +353,14 @@ describe('<Playground />', () => {
     slot.focus()
     fireEvent.click(slot)
     await act(async () => { release(); await held })
-    await screen.findByText('Cancelled')
+    await screen.findByText('Cancelled', RESULT_WORD)
     expect(slot.isConnected).toBe(true)
     expect(document.activeElement).toBe(slot)
     expect(slot.textContent).toContain('Retry')
 
     fireEvent.click(slot) // Retry: the runtime is no longer held back, so this run finishes
     expect(document.activeElement).toBe(slot)
-    await screen.findByText('Allowed')
+    await screen.findByText('Allowed', RESULT_WORD)
     expect(document.activeElement).toBe(slot)
     expect(slot.getAttribute('aria-disabled')).toBe('true')
     expect(slot.textContent).toContain('Cancel')
@@ -378,8 +382,8 @@ describe('<Playground />', () => {
     await screen.findByText('Fix 1 problem before running')
     await act(async () => { release(); await new Promise(resolve => setTimeout(resolve, 20)) })
     expect(screen.getByText('Fix 1 problem before running')).toBeTruthy()
-    expect(screen.queryByText('Allowed')).toBeNull()
-    expect(screen.queryByText('Cancelled')).toBeNull()
+    expect(screen.queryByText('Allowed', RESULT_WORD)).toBeNull()
+    expect(screen.queryByText('Cancelled', RESULT_WORD)).toBeNull()
     expect(screen.queryByText('Simulated in your browser')).toBeNull()
     expect(onRun).not.toHaveBeenCalled()
     expect(document.querySelector('.pg-status')!.textContent).toBe('Nothing ran. 1 block needs fixing.')
@@ -457,5 +461,157 @@ describe('<Playground />', () => {
     act(() => { caller.blur(); fireEvent.blur(caller) })
     await waitFor(() => expect(document.querySelectorAll('[data-editor="codemirror"]').length).toBe(2))
     expect(document.querySelector('[data-editor="codemirror"] .cm-content')!.textContent).toContain("role: 'guest'")
+  })
+})
+
+describe('playground layout: button ladder, presets table and result card', () => {
+  const RESULT_WORD = { selector: '.pg-result .lab-outcome__word' }
+
+  it('Run is the only primary (yellow) control; Cancel, Reset and the toggle use their own rungs', () => {
+    render(<Playground loadEditor={noEditor} />)
+    const run = screen.getByRole('button', { name: 'Run' })
+    expect(run.classList.contains('lab-btn--primary')).toBe(true)
+    expect(document.querySelectorAll('.pg .lab-btn--primary')).toHaveLength(1)
+
+    const slot = screen.getByRole('button', { name: 'Cancel' })
+    expect(slot.classList.contains('lab-btn--cancel')).toBe(true)
+    expect(slot.getAttribute('data-action')).toBe('cancel')
+    expect(slot.querySelector('svg.lucide-square')).toBeTruthy()
+
+    for (const b of playgroundBlocks) {
+      const reset = screen.getByRole('button', { name: `Reset this block: ${b.title}` })
+      expect(reset.classList.contains('lab-btn--tertiary')).toBe(true)
+      expect(reset.classList.contains('lab-btn--sm')).toBe(false) // a full 44px target
+      expect(reset.querySelector('svg.lucide-rotate-ccw')).toBeTruthy()
+    }
+    for (const chip of screen.getAllByRole('button', { name: /^Try / })) expect(chip.classList.contains('lab-btn--tertiary')).toBe(true)
+  })
+
+  it('the plain-text toggle is one borderless toggle above the blocks, with a Square or SquareCheck icon and aria-pressed', () => {
+    render(<Playground loadEditor={noEditor} />)
+    const toggle = screen.getByRole('button', { name: 'Plain text editor' })
+    expect(toggle.classList.contains('lab-btn--toggle')).toBe(true)
+    expect(toggle.closest('.pg-blocks-head')).toBeTruthy()
+    expect(toggle.closest('.pg-controls')).toBeNull()
+    expect(toggle.getAttribute('aria-pressed')).toBe('false')
+    expect(toggle.querySelector('svg.lucide-square')).toBeTruthy()
+    fireEvent.click(toggle)
+    expect(toggle.getAttribute('aria-pressed')).toBe('true')
+    expect(toggle.querySelector('svg.lucide-square-check')).toBeTruthy()
+    expect(toggle.querySelector('svg.lucide-square')).toBeNull()
+    expect(announce).toHaveBeenCalledWith('Plain text editor on')
+    expect(screen.getAllByRole('button', { name: 'Plain text editor' })).toHaveLength(1)
+  })
+
+  it('after a cancel the slot turns into a neutral Retry (data-action="retry")', async () => {
+    const real = await loadAgentRuntime()
+    let release!: () => void
+    const held = new Promise<void>(resolve => { release = resolve })
+    const runner = createPlaygroundRunner(async () => ({ ...real, runGoverned: async options => { await held; return real.runGoverned(options) } }))
+    render(<Playground runner={runner} loadEditor={noEditor} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Run' }))
+    const slot = screen.getByRole('button', { name: 'Cancel' })
+    expect(slot.getAttribute('data-action')).toBe('cancel')
+    fireEvent.click(slot)
+    release()
+    await screen.findByText('Cancelled', RESULT_WORD)
+    expect(slot.getAttribute('data-action')).toBe('retry')
+    expect(slot.querySelector('svg.lucide-rotate-ccw')).toBeTruthy()
+  })
+
+  it('every Expected cell shows an outcome badge with the reason below, and still reads exactly as describeExpected()', () => {
+    render(<Playground loadEditor={noEditor} />)
+    const reasonOf = (e: ExpectedOutcome) => e.status === 'ok' ? e.summary : `${e.stage} · ${e.code}`
+    for (const b of playgroundBlocks) {
+      const table = within(screen.getByRole('group', { name: b.title })).getByRole('table')
+      const rows = within(table).getAllByRole('row').slice(1)
+      const expected = [defaultExpected, ...b.chips.map(c => c.expected), ...b.combos.map(c => c.expected)]
+      expect(rows).toHaveLength(expected.length)
+      rows.forEach((row, i) => {
+        const cell = row.querySelectorAll('td')[1]
+        expect(cell.textContent).toBe(describeExpected(expected[i]))
+        const badge = cell.querySelector('.lab-outcome')!
+        expect(badge.getAttribute('data-status')).toBe(expected[i].status)
+        // A summary is plain language; only the stage and reason code are set as code.
+        const reason = cell.querySelector(expected[i].status === 'ok' ? 'span.pg-summary' : 'code.pg-reason')!
+        expect(reason.textContent).toBe(reasonOf(expected[i]))
+        if (expected[i].status === 'ok') expect(cell.querySelector('code')).toBeNull()
+        // The reason comes after the badge, never inside it.
+        expect(badge.contains(reason)).toBe(false)
+        expect(badge.compareDocumentPosition(reason) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      })
+      // No yellow in the table: only Run is primary.
+      expect(table.querySelector('.lab-btn--primary')).toBeNull()
+    }
+  })
+
+  it('the result card shows the honest tier label (TierLabel from tierLabel(run)) and an outcome badge in its head band', async () => {
+    const onRun = vi.fn()
+    render(<Playground onRun={onRun} loadEditor={noEditor} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Run' }))
+    await screen.findByText('Allowed', RESULT_WORD)
+    const run = onRun.mock.calls[0][0] as LabRun
+    const head = document.querySelector('.pg-result-head') as HTMLElement
+    expect(within(head).getByRole('heading', { level: 3, name: 'Result' })).toBeTruthy()
+    const tier = head.querySelector('.lab-tier')!
+    expect(tier.getAttribute('data-tier')).toBe('simulated')
+    expect(tier.textContent).toBe(tierLabel(run))
+    expect(tier.textContent).not.toMatch(/live/i)
+    expect(head.querySelector('.lab-outcome')!.getAttribute('data-status')).toBe('ok')
+    expect(document.querySelector('.pg-tier')).toBeNull() // the v1.0 chip is gone
+    expect(screen.getByRole('group', { name: 'Result' })).toBeTruthy()
+  })
+
+  it('never adds a live region of its own', async () => {
+    render(<Playground loadEditor={noEditor} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Try guest' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Run' }))
+    await screen.findByText('Refused', RESULT_WORD)
+    expect(document.querySelectorAll('[aria-live], [role="status"], [role="alert"], [role="log"]')).toHaveLength(0)
+  })
+})
+
+describe('CodeMirror token theme (src/playground/codemirror.ts)', () => {
+  // WCAG relative luminance, read straight from tokens.css, so the editor's colours stay tied to the tokens.
+  const channel = (c: number) => { const v = c / 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4 }
+  const lum = (hex: string) => { const n = parseInt(hex.slice(1), 16); return 0.2126 * channel((n >> 16) & 255) + 0.7152 * channel((n >> 8) & 255) + 0.0722 * channel(n & 255) }
+  const ratio = (a: string, b: string) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05) }
+  const css = readFileSync(join(process.cwd(), 'src/tokens.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+  const block = (selector: string) => { const at = css.indexOf(selector); return css.slice(css.indexOf('{', at) + 1, css.indexOf('}', at)) }
+  const vars = (body: string): Record<string, string> => Object.fromEntries([...body.matchAll(/--([a-z0-9-]+)\s*:\s*(#[0-9a-f]{6})\s*;/gi)].map(m => [m[1], m[2]]))
+  const light = vars(block(':root {'))
+  const themes = { light, dark: { ...light, ...vars(block(':root[data-theme="dark"] {')) } }
+
+  it('colours comments, strings and keys with CSS variables only, each at least 4.5:1 on --surface-raised in both themes', async () => {
+    const { tokenStyle } = await import('../src/playground/codemirror')
+    const rules = tokenStyle.module!.getRules()
+    expect(rules).not.toMatch(/#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i)
+    const used = [...new Set([...rules.matchAll(/color:\s*var\(--([a-z0-9-]+)\)/g)].map(m => m[1]))]
+    expect(used).toEqual(expect.arrayContaining(['ink-muted', 'text-blue', 'text-magenta']))
+    for (const [name, tokens] of Object.entries(themes)) {
+      for (const token of used) {
+        expect(tokens[token], `${name}: --${token}`).toBeTruthy()
+        expect(ratio(tokens[token], tokens['surface-raised']), `${name}: --${token} on --surface-raised`).toBeGreaterThanOrEqual(4.5)
+      }
+    }
+  })
+
+  it('highlights the default block text: comment, string and key spans get distinct classes from the token theme', async () => {
+    render(<Playground />)
+    const content = await waitFor(() => {
+      const found = document.querySelector('[data-editor="codemirror"] .cm-content')
+      expect(found).toBeTruthy()
+      return found as HTMLElement
+    }, { timeout: 5000 })
+    const { tokenStyle } = await import('../src/playground/codemirror')
+    const rules = tokenStyle.module!.getRules()
+    const classOf = (text: string) => [...content.querySelectorAll('span')].find(s => s.textContent === text)?.className ?? ''
+    const comment = classOf(content.querySelector('.cm-line')!.textContent!)
+    const string = classOf("'rider-support'")
+    const key = classOf('role')
+    for (const c of [comment, string, key]) expect(c, 'a highlighted span').not.toBe('')
+    expect(new Set([comment, string, key]).size).toBe(3)
+    expect(classOf('readsLeft'), 'every name before a colon is a key').toBe(key)
+    for (const c of [comment, string, key]) expect(rules).toContain('.' + c.split(' ')[0])
   })
 })

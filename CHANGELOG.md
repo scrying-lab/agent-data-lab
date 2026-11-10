@@ -14,6 +14,51 @@ or recorded live run. Nothing is called live unless a real model produced it.
 Planned for later releases: live recordings on Amazon Bedrock with two models side by side, a third
 editable block for the analytics lesson, and a verified WSO2 gateway experiment.
 
+## [1.1.0] - 2026-11-09
+
+A design pass for readability in light and dark. The lesson text, what each label means, the
+gate's checks and the agent code are unchanged.
+
+### Changed
+
+- **A clearer, calmer page in light and dark.** Headings, labels and body text now look different from
+  each other. Space Grotesk, a modern sans serif, is used only for labels, buttons and numbers; the
+  serif headings and the body text are unchanged. The yellow accent is softer, with blue and magenta
+  tints added to group related parts of the page. Dark mode has its own colours rather than inverted
+  light ones. Every colour pair is contrast-tested in both themes (`src/tokens.css`,
+  `tests/tokens.test.ts`).
+- **Result labels are real labels.** "Recorded replay", "Simulated in your browser" and "Recorded live
+  run" each have their own colour and icon, and an outcome badge (Allowed, Refused, Failed, Cancelled)
+  sits beside them (`src/shell/primitives/`).
+- **Buttons show what matters most.** Run is the one yellow button in its row; Cancel has a soft red
+  tint; Reset and the editor toggle step back (`src/components/ui/button.tsx`).
+- The dark browser toolbar colour matches the dark page (`index.html`).
+- **A page you can scan.** A row of numbered links under the introduction jumps to each section, and
+  every section opens with its number, a short label and one line on why it matters. The lessons'
+  introductions are split into short fact tiles, and the "predict" question stands out as a callout
+  (`src/shell/`, `content/lessons.ts`).
+- **Two clear places in the governance lesson.** "Try it yourself" (pink tint) holds the editable
+  blocks; "Watch saved runs" (blue tint) holds the recorded examples, the result and its trace. Each
+  result shows its label once (`src/shell/GovernanceLesson.tsx`).
+- **Playground controls.** A clear yellow Run, a soft red Cancel and a quieter Reset. The plain-text
+  editor switch sits above the blocks. The presets table shows an outcome badge for each preset, and
+  the editor colours keys, text and comments in both themes (`src/playground/`).
+- **The trace starts with the Guide.** The plain-language Guide comes first. The step list with
+  timings and the graph are under "Every step with timings (for developers)", closed on phones. Each
+  lesson's trace has its own title (`src/trace/`).
+- **Charts.** Each chart shows its label and its two peak numbers above the plot (`src/charts/`).
+- **Python → TypeScript.** Cards list every pair. One pair opens at a time, and phones switch between
+  Python and TypeScript with tabs. "Elsewhere" shows concept cards, with other platforms and sources
+  behind "show more". "Run it for real" ends with a "Why it matters" note (`src/lessons/`).
+
+### Fixed
+
+- "Show the numbers" under a chart now really hides the table when closed (`src/charts/`).
+- The site now serves the full licence of the bundled Space Grotesk font next to `NOTICE.txt`
+  (`public/licenses/`, `NOTICE`).
+- In dark mode, the quietest hours of the weekly heatmap no longer disappear into the background
+  (`src/charts/WeekHeatmap.tsx`).
+
 ## [1.0.0] - 2026-11-09
 
 The first public release: a small AI agent built with AWS Strands Agents (TypeScript), with a gate that

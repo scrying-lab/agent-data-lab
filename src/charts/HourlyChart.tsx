@@ -4,8 +4,8 @@ import type { Point, Result } from '../../analytics/contracts'
 import { ChartFigure, type Provenance } from './ChartFigure'
 import { PlotMount } from './PlotMount'
 import { useChartColors } from './hooks'
-import { MEAN_UNIT, MEAN_VS_TOTAL, clock, count, one, sourceLabel } from './format'
-import { HOURLY_SERIES, HOURS, hourlySummary } from './summary'
+import { MEAN_UNIT, MEAN_VS_TOTAL, PLOT_STYLE, clock, count, one, sourceLabel } from './format'
+import { HOURLY_SERIES, HOURS, hourlyStats, hourlySummary } from './summary'
 
 const NARROW = 480
 const short: Record<string, string> = { 'Working days': 'Working', 'Nonworking days': 'Nonworking' }
@@ -50,7 +50,7 @@ export function HourlyChart({ result, provenance }: { result: Result; provenance
       marginRight: narrow ? 78 : 112,
       marginTop: 24,
       marginBottom: 40,
-      style: { background: 'transparent', color: 'currentColor', fontFamily: 'var(--font-mono)', fontSize: '11px' },
+      style: PLOT_STYLE,
       x: { label: 'Hour of day', domain: [0, 23], ticks: narrow ? [0, 6, 12, 18, 23] : [0, 3, 6, 9, 12, 15, 18, 21, 23], labelAnchor: 'center', labelArrow: 'none' },
       // Headroom above the highest peak keeps its value label clear of the axis label.
       y: { label: 'Mean rentals per observed hour', grid: true, domain: [0, top * 1.15], nice: true, ticks: 5, labelArrow: 'none' },
@@ -67,6 +67,7 @@ export function HourlyChart({ result, provenance }: { result: Result; provenance
       summary={summary}
       source={sourceLabel(result.period)}
       provenance={provenance}
+      stats={hourlyStats(result)}
       tableLabel="Hourly numbers, scrollable"
       table={
         <table className="lab-chart__table">

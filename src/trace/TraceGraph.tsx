@@ -7,7 +7,7 @@ import type { Step, Tone } from './steps'
 type StepNodeData = { num: string; label: string; tone: Tone }
 type StepNode = Node<StepNodeData, 'step'>
 
-const NODE_WIDTH = 240
+const NODE_WIDTH = 280
 const NODE_GAP = 64
 
 /** A picture of one step. No controls inside: the step list is the keyboard path. */

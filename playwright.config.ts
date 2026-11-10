@@ -6,6 +6,8 @@ const port = Number(process.env.PORT ?? 4173)
 export default defineConfig({
   testDir: 'tests/e2e',
   fullyParallel: true,
+  // The page runs a real agent loop and full axe audits; 60 s leaves headroom on a busy machine.
+  timeout: 60_000,
   reporter: [['list']],
   use: { baseURL: `http://127.0.0.1:${port}`, trace: 'retain-on-failure' },
   webServer: {

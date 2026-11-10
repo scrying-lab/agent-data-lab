@@ -1,13 +1,19 @@
 import { useId } from 'react'
 import { modelText, type LabRun } from '../../agent/run-contract'
 import { stageWords } from '../../content/narration'
-import { formatTime, glossTool, type Step } from './steps'
-import { ToneMark } from './ToneMark'
+import { OutcomeBadge, type OutcomeStatus } from '../shell/primitives'
+import { formatTime, glossTool, type Step, type Tone } from './steps'
 
 // A scrollable <pre> must be reachable by keyboard so its overflow can be scrolled (WCAG 2.1.1).
 const SCROLLABLE_TAB_STOP = 0
 
-/** Everything recorded for the selected step: a plain explanation first, then the exact data. */
+/** A step's tone as an outcome badge. A refusal is neutral: the gate working as designed. */
+const badgeStatus: Record<Exclude<Tone, 'neutral'>, OutcomeStatus> = { ok: 'ok', refused: 'denied', failed: 'failed' }
+
+/**
+ * Everything recorded for the selected step: a plain explanation first, then the exact data.
+ * Unboxed on the panel's paper; only a gate decision gets a tint, with a bar in its outcome colour.
+ */
 export function StepDetails({ run, step, total }: { run: LabRun; step: Step; total: number }) {
   const headingId = useId()
   const e = step.event
@@ -27,7 +33,7 @@ export function StepDetails({ run, step, total }: { run: LabRun; step: Step; tot
       {e.kind === 'gate' && (
         <div className={'trace-decision trace-decision--' + step.tone}>
           <p className="trace-decision__head">
-            <ToneMark tone={step.tone} />
+            {step.tone !== 'neutral' && <OutcomeBadge status={badgeStatus[step.tone]} />}
             {e.decision === 'allow' ? 'Every gate check passed' : `Stopped at the ${e.stage ? stageWords[e.stage] : 'gate'} check`}
           </p>
           {e.decision !== 'allow' && (
@@ -57,7 +63,7 @@ export function StepDetails({ run, step, total }: { run: LabRun; step: Step; tot
 function Output({ step, run }: { step: Step; run: LabRun }) {
   const e = step.event
   if (step.tone === 'failed') {
-    return <div className="trace-decision trace-decision--failed"><p className="trace-decision__head"><ToneMark tone="failed" />{step.code ? <code>{step.code}</code> : 'Failure'}</p></div>
+    return <div className="trace-decision trace-decision--failed"><p className="trace-decision__head"><OutcomeBadge status="failed" />{step.code ? <code>{step.code}</code> : 'Failure'}</p></div>
   }
   if (e.kind === 'tool_executed') {
     return (

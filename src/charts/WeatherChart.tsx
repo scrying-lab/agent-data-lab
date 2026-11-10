@@ -1,5 +1,6 @@
 import { useCallback, useId, useMemo, useState } from 'react'
 import * as Plot from '@observablehq/plot'
+import { Check } from 'lucide-react'
 import type { Point, Result } from '../../analytics/contracts'
 import { announce } from '../announce'
 import { Badge } from '../components/ui/badge'
@@ -7,8 +8,8 @@ import { ToggleGroup, ToggleGroupItem } from '../components/ui/toggle-group'
 import { ChartFigure, type Provenance } from './ChartFigure'
 import { PlotMount } from './PlotMount'
 import { useChartColors } from './hooks'
-import { MEAN_UNIT, SMALL_SAMPLE, SMALL_SAMPLE_TEXT, TOTAL_UNIT, count, one, sourceLabel } from './format'
-import { isSmallSample, measureOf, totalText, weatherOrder, weatherSummary, type Measure } from './summary'
+import { MEAN_UNIT, PLOT_STYLE, SMALL_SAMPLE, SMALL_SAMPLE_TEXT, TOTAL_UNIT, count, one, sourceLabel } from './format'
+import { isSmallSample, measureOf, totalText, weatherOrder, weatherStats, weatherSummary, type Measure } from './summary'
 
 const ROW = 56
 const compact = new Intl.NumberFormat('en-US', { notation: 'compact' })
@@ -44,7 +45,7 @@ export function WeatherChart({ result, provenance }: { result: Result; provenanc
       marginRight: 84,
       marginTop: 8,
       marginBottom: 40,
-      style: { background: 'transparent', color: 'currentColor', fontFamily: 'var(--font-mono)', fontSize: '11px' },
+      style: PLOT_STYLE,
       x: { label: axisLabel[measure], grid: true, ticks: width < 480 ? 3 : 5, tickFormat: (d: number) => compact.format(d), labelAnchor: 'left', labelArrow: 'none' },
       y: { domain: order, axis: null, padding: 0 },
       marks: [
@@ -72,12 +73,18 @@ export function WeatherChart({ result, provenance }: { result: Result; provenanc
       summary={summary}
       source={sourceLabel(result.period, measure === 'total' ? TOTAL_UNIT + ' (mean × observed hours)' : MEAN_UNIT)}
       provenance={provenance}
+      stats={weatherStats(result, measure)}
       controls={
         <div className="lab-chart__controls">
           <span id={labelId} className="lab-chart__control-label">Measure</span>
           <ToggleGroup type="single" value={measure} onValueChange={choose} aria-labelledby={labelId} className="lab-chart__toggle">
-            <ToggleGroupItem value="mean" className="lab-chart__toggle-item">Mean per hour</ToggleGroupItem>
-            <ToggleGroupItem value="total" className="lab-chart__toggle-item">Total rentals</ToggleGroupItem>
+            {/* The selected choice carries a check as well as the ink fill, so it never relies on colour. */}
+            <ToggleGroupItem value="mean" className="lab-chart__toggle-item">
+              {measure === 'mean' && <Check aria-hidden="true" className="lab-chart__check" />}Mean per hour
+            </ToggleGroupItem>
+            <ToggleGroupItem value="total" className="lab-chart__toggle-item">
+              {measure === 'total' && <Check aria-hidden="true" className="lab-chart__check" />}Total rentals
+            </ToggleGroupItem>
           </ToggleGroup>
         </div>
       }

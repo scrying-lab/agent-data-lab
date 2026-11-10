@@ -1,7 +1,7 @@
 {
   "contractVersion": "lab-eval/v1",
   "sdkVersion": "1.24.0",
-  "inputsHash": "f863c5add199cf6e80492b0fa2bdec640ad28966052516223ec37732af738aaa",
+  "inputsHash": "a10653a148b19e09b80a26cac1c0fc07160c1af4c942ef61a253af362726b91e",
   "cases": [
     {
       "id": "L-01",

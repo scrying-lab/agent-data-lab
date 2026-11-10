@@ -38,3 +38,15 @@ const DAY_NAMES: Record<string, string> = {
   Sun: 'Sunday', Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday',
 }
 export const dayName = (day: string): string => DAY_NAMES[day] ?? day
+
+/**
+ * The inline style every Plot SVG gets. Text in a plot (ticks, axis names, direct labels, n values)
+ * is short and mostly numeric, so it takes the ui face at 12px with tabular, lining numerals.
+ */
+export const PLOT_STYLE = {
+  background: 'transparent',
+  color: 'currentColor',
+  fontFamily: 'var(--font-ui)',
+  fontSize: '12px',
+  fontVariantNumeric: 'tabular-nums lining-nums',
+}

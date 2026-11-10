@@ -44,3 +44,11 @@ function subscribeTheme(onChange: () => void) {
 export function useColorMode(): 'light' | 'dark' {
   return useSyncExternalStore(subscribeTheme, currentColorMode, () => 'light')
 }
+
+/** Phone width: below the 640px breakpoint where the page grid gains a second column. */
+export const PHONE_QUERY = '(max-width: 639.98px)'
+
+/** True on a phone-width screen when the panel first renders. Without matchMedia, assume a wide screen. */
+export function isPhone(): boolean {
+  return mediaQuery(PHONE_QUERY)?.matches ?? false
+}

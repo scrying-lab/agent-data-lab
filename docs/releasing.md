@@ -53,11 +53,13 @@ maintainer's machine.
 3. Scan the public history, including author and committer emails:
    `LAB_DENYLIST=path/to/denylist node scripts/public-safety.mjs --history --ref main --since <initial-commit>`
    (`--since` skips the repository's initial commit created on GitHub.)
-4. Tag the release on `main` as `vX.Y.Z` (an annotated tag), then push `main` and the tag. Pushing `main`
-   runs the checks and deploys the site only if they pass.
-4. Create a GitHub Release named `vX.Y.Z` and paste that version's CHANGELOG section as its notes.
-5. Deploy the site from the tagged commit. Open it once to check that it loads and labels every result.
-6. If the hosted address is new, set `links.project.site` in `content/links.ts`. The tests then
+4. Tag the release on `main` as `vX.Y.Z` (an annotated tag), then push `main` and the tag over SSH.
+   A browser-issued HTTPS token usually lacks the `workflow` scope that GitHub requires for commits
+   touching `.github/workflows/`, and the push is rejected. Pushing `main` runs the checks and deploys
+   the site only if they pass.
+5. Create a GitHub Release named `vX.Y.Z` and paste that version's CHANGELOG section as its notes.
+6. Once the deploy finishes, open the site and check that it loads and labels every result.
+7. If the hosted address is new, set `links.project.site` in `content/links.ts`. The tests then
    require the README to link to it instead of the placeholder.
 
 ## Never

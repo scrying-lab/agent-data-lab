@@ -1,0 +1,50 @@
+/* Callout: predict (yellow strip over the yellow wash), why (6px ink rule), dev (surface disclosure). */
+.lab-callout { margin: 0 0 24px; min-width: 0; color: var(--ink); }
+.lab-callout__kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font: var(--type-kicker);
+  letter-spacing: var(--track-kicker);
+  text-transform: uppercase;
+}
+.lab-callout__kicker svg { width: 16px; height: 16px; flex: none; }
+.lab-callout__body { min-width: 0; }
+.lab-callout__body > :first-child { margin-top: 0; }
+.lab-callout__body > :last-child { margin-bottom: 0; }
+
+.lab-callout[data-kind="predict"] { border: var(--border-width) solid var(--rule); background: var(--wash-yellow); }
+.lab-callout[data-kind="predict"] > .lab-callout__kicker {
+  padding: 6px 16px;
+  border-bottom: var(--border-width) solid var(--btn-primary-edge);
+  background: var(--brand-yellow);
+  color: var(--brand-yellow-ink);
+}
+.lab-callout[data-kind="predict"] > .lab-callout__body { padding: 16px; font: var(--type-voice); }
+
+.lab-callout[data-kind="why"] {
+  display: grid;
+  gap: 8px;
+  padding: 4px 0 4px 16px;
+  border-left: var(--bar-width) solid var(--ink);
+  background: var(--paper);
+}
+
+.lab-callout[data-kind="dev"] { border: var(--border-width) solid var(--rule); background: var(--surface); }
+.lab-callout[data-kind="dev"] > summary {
+  min-height: var(--target-min);
+  padding: 0 16px;
+  cursor: pointer;
+  list-style: none;
+}
+.lab-callout[data-kind="dev"] > summary::-webkit-details-marker { display: none; }
+.lab-callout[data-kind="dev"] > summary::before { content: "+"; content: "+" / ""; font: 700 1rem / 1 var(--font-mono); }
+.lab-callout[data-kind="dev"][open] > summary::before { content: "\2212"; content: "\2212" / ""; }
+.lab-callout[data-kind="dev"][open] > summary { border-bottom: 1px solid var(--rule-divider); }
+.lab-callout[data-kind="dev"] > .lab-callout__body { padding: 16px; }
+
+@media (forced-colors: active) {
+  .lab-callout[data-kind="predict"] > .lab-callout__kicker { border-bottom-color: CanvasText; }
+  .lab-callout[data-kind="why"] { border-left-color: CanvasText; }
+}

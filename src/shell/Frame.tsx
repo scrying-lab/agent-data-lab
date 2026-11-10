@@ -1,10 +1,23 @@
 import { useId } from 'react'
 import { ArrowRight, Bike, Code2, ShieldCheck } from 'lucide-react'
-import { tierLabel, type LabRun, type Tier } from '../../agent/run-contract'
+import type { Tier } from '../../agent/run-contract'
 import { links } from '../../content/links'
+import { SectionOpener, TierLabel } from './primitives'
 import { ThemeControl } from './ThemeControl'
+import { baseLabel } from './tiers'
 
 export const LAB_ID = 'lab'
+export const LABELS_ID = 'labels'
+
+/** The page index under the hero: every numbered section, in reading order. */
+export const sectionIndex = [
+  { numeral: '01', href: '#' + LABELS_ID, name: 'Labels' },
+  { numeral: '02', href: '#lesson-governance', name: 'Governance' },
+  { numeral: '03', href: '#lesson-analytics', name: 'Analytics' },
+  { numeral: '04', href: '#python-to-typescript', name: 'Python → TypeScript' },
+  { numeral: '05', href: '#elsewhere', name: 'Elsewhere' },
+  { numeral: '06', href: '#run-for-real', name: 'Run it for real' },
+] as const
 
 /** Focus the lab after the skip link's own jump, so the next Tab starts inside it in every browser. */
 function focusLab() {
@@ -32,31 +45,17 @@ const paths = [
   { href: '#run-for-real', who: 'Developer?', what: 'Run it for real', Icon: Code2 },
 ] as const
 
-type HeroProps = {
-  /** True when the playground is mounted: then some results on the page are made just now, not recorded. */
-  hasPlayground?: boolean
-}
-
-export function Hero({ hasPlayground = false }: HeroProps) {
+export function Hero() {
   const headingId = useId()
   const pathsId = useId()
   return (
     <section className="shell-hero" aria-labelledby={headingId}>
       <p className="shell-kicker">A teaching lab for AWS Strands Agents · TypeScript</p>
       <h1 id={headingId} className="shell-hero__title">An AI agent asks for data. A gate decides.</h1>
-      <div className="shell-prose shell-hero__lede">
-        <p>
-          This is a small AI agent that answers questions about real bike-sharing data. Before any data is read, a
-          gate checks every tool call the agent makes.
-        </p>
-        <p>
-          Everything on this page runs in your browser, and no AI model is called here.{' '}
-          {hasPlayground
-            ? 'The recorded examples are saved runs of the real agent code; the playground runs that same code just now, with a simulated model.'
-            : 'The results you see are saved recordings of the real agent code.'}{' '}
-          The real thing runs when you clone the repository.
-        </p>
-      </div>
+      <p className="shell-hero__lede">
+        This is a small AI agent that answers questions about real bike-sharing data. Before any data is read, a
+        gate checks every tool call the agent makes.
+      </p>
       <h2 id={pathsId} className="sr-only">Where to start</h2>
       <nav className="shell-paths" aria-labelledby={pathsId}>
         {paths.map(({ href, who, what, Icon }) => (
@@ -66,14 +65,20 @@ export function Hero({ hasPlayground = false }: HeroProps) {
           </a>
         ))}
       </nav>
+      <nav className="shell-index" aria-label="Sections">
+        <ol className="shell-index__list">
+          {sectionIndex.map(({ numeral, href, name }) => (
+            <li key={href}>
+              <a className="shell-index__chip" href={href}>
+                <span className="shell-index__num" aria-hidden="true">{numeral}</span>
+                <span className="shell-index__name">{name}</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
     </section>
   )
-}
-
-/** The words tierLabel() starts with for each tier, taken from the contract so they cannot drift. */
-function baseLabel(tier: Tier): string {
-  const sample: Pick<LabRun, 'tier' | 'provider' | 'recordedAt'> = { tier, provider: { kind: 'bedrock', modelId: 'model' }, recordedAt: null }
-  return tierLabel(sample).split(' · ')[0]
 }
 
 const tierNotes: { tier: Tier; text: string }[] = [
@@ -82,21 +87,45 @@ const tierNotes: { tier: Tier; text: string }[] = [
   { tier: 'live', text: 'A run with a real AI model on Amazon Bedrock, recorded earlier and played back here. The label also names the model, region and date.' },
 ]
 
-export function LabelGuide() {
+type LabelGuideProps = {
+  /** True when the playground is mounted: then some results on the page are made just now, not recorded. */
+  hasPlayground?: boolean
+}
+
+/**
+ * 01: how results are made. The opener says where everything on the page runs; then one column
+ * per tier, each on its own tint, with the live column holding the note that none exist yet.
+ */
+export function LabelGuide({ hasPlayground = false }: LabelGuideProps) {
   const headingId = useId()
   return (
-    <section className="shell-section shell-labels" aria-labelledby={headingId}>
-      <h2 id={headingId} className="shell-section__title">How to read the labels</h2>
+    <section id={LABELS_ID} className="shell-section shell-labels" aria-labelledby={headingId}>
+      <SectionOpener
+        numeral="01"
+        kicker="Before you start"
+        title={<h2 id={headingId}>How to read the labels</h2>}
+        why={
+          <>
+            Everything on this page runs in your browser, and no AI model is called here.{' '}
+            {hasPlayground
+              ? 'The recorded examples are saved runs of the real agent code; the playground runs that same code just now, with a simulated model.'
+              : 'The results you see are saved recordings of the real agent code.'}{' '}
+            The real thing runs when you clone the repository.
+          </>
+        }
+      />
       <p className="shell-prose">Every result on this page carries exactly one of these labels. It says how the result was made.</p>
       <dl className="shell-labels__list">
         {tierNotes.map(({ tier, text }) => (
-          <div key={tier} className="shell-labels__item">
-            <dt><span className="shell-tier">{baseLabel(tier)}</span></dt>
+          <div key={tier} className="shell-labels__item" data-tier={tier}>
+            <dt><TierLabel tier={tier}>{baseLabel(tier)}</TierLabel></dt>
             <dd>{text}</dd>
+            {tier === 'live' && (
+              <dd className="shell-labels__note">Live recordings with real models are planned for a later release (see the changelog). Until then, no result on this page comes from a real AI model.</dd>
+            )}
           </div>
         ))}
       </dl>
-      <p className="shell-prose shell-muted">Live recordings with real models are planned for a later release (see the changelog). Until then, no result on this page comes from a real AI model.</p>
     </section>
   )
 }
@@ -108,7 +137,7 @@ export function Credits() {
   const headingId = useId()
   return (
     <section id="credits" className="shell-section shell-credits" aria-labelledby={headingId}>
-      <h2 id={headingId} className="shell-section__title">Credits and licences</h2>
+      <SectionOpener kicker="About this lab" title={<h2 id={headingId}>Credits and licences</h2>} />
       <dl className="shell-credits__list">
         <div>
           <dt>Data</dt>

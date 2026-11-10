@@ -1,9 +1,13 @@
-/* Playground. Editorial + modern brutalism: 2px rules, square corners, solid offset shadows,
-   serif display headings, monospace for code and labels. Colours come only from src/tokens.css.
+/* Playground. Colours come only from src/tokens.css; buttons take their look from the ladder in
+   src/style.css (.lab-btn), so this file only lays them out.
+   Border budget (spec section 5): the two blocks and the result are cards (a 2px rule and a head
+   band holding the title); editors are inputs (a 2px rule alone); table rows are zebra stripes split
+   by 1px hairlines; the operator view is a tint with a bar at its edge. Nothing is more than two
+   bordered levels deep, and the section itself has no box, so it sits on whatever zone holds it.
    Unlayered on purpose, so these rules win over the shadcn utility classes. */
 .pg {
   color: var(--ink);
-  background: var(--paper);
+  background: transparent;
   font-family: var(--font-body);
   margin: 32px 0;
   min-width: 0;
@@ -13,26 +17,45 @@
   letter-spacing: -0.02em;
   margin: 0 0 8px;
 }
-.pg-lede { max-width: 62ch; margin: 0 0 20px; color: var(--ink-muted); }
+.pg-lede { max-width: 62ch; margin: 0 0 16px; color: var(--ink-muted); }
 
-.pg-blocks { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 20px; }
+/* The editor preference, once, above both blocks. */
+.pg-blocks-head { display: flex; justify-content: flex-end; margin: 0 0 8px; }
+
+.pg-blocks { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 20px; align-items: start; }
+
+/* Cards: a 2px rule, a raised head band with the title, and a paper body. No shadow: only Run is raised. */
 .pg-block, .pg-result-wrap {
   border: var(--border-width) solid var(--rule);
   border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--rule);
-  padding: 16px;
+  background: var(--paper);
   min-width: 0;
 }
-.pg-block-title { font: 400 1.35rem/1.2 var(--font-display); margin: 0 0 6px; }
+.pg-block-head, .pg-result-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 10px 16px;
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--rule-divider);
+}
+.pg-block-title, .pg-result-title {
+  font: var(--type-card);
+  letter-spacing: var(--track-card);
+  margin: 0;
+}
+.pg-block-body, .pg-result-body { padding: 16px; min-width: 0; }
 .pg-intro { margin: 0 0 12px; color: var(--ink-muted); font-size: 0.95rem; }
 
+/* Editors sit on the raised surface: lighter than the card in dark, as elevation should be. */
 .pg-editor { width: 100%; min-width: 0; }
 .pg .pg-textarea {
   display: block;
   font: 0.9rem/1.5 var(--font-mono);
   color: var(--ink);
-  background: var(--paper);
+  background: var(--surface-raised);
   border: var(--border-width) solid var(--rule);
   border-radius: var(--radius);
   box-shadow: none;
@@ -45,66 +68,45 @@
   border-color: var(--outcome-failed);
   border-style: dashed;
 }
+.pg .pg-textarea:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; box-shadow: none; }
 
 .pg-inline-error, .pg-error-title { display: flex; gap: 8px; align-items: flex-start; }
 .pg-inline-error { color: var(--outcome-failed); margin: 8px 0 0; font-size: 0.9rem; }
 .pg-inline-error svg, .pg-error-title svg { flex: none; margin-top: 2px; }
 
 .pg-hints { list-style: none; margin: 10px 0 0; padding: 0; }
-.pg-hints li { margin: 2px 0; }
-.pg-hints code, .pg code { font-family: var(--font-mono); font-size: 0.82rem; overflow-wrap: anywhere; }
-.pg-hints code { color: var(--ink-muted); }
-.pg-expect { margin: 12px 0 6px; font-size: 0.9rem; }
+.pg code { font-family: var(--font-mono); font-size: 0.82rem; overflow-wrap: anywhere; }
+.pg-expect { margin: 14px 0 8px; font-size: 0.9rem; }
 
-.pg-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 0 0 12px; table-layout: fixed; }
+/* Presets: zebra rows on the card, split by hairlines; no ruled grid. */
+.pg-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin: 0 0 16px; table-layout: fixed; }
 .pg-table th, .pg-table td {
-  border-bottom: 1px solid var(--rule);
-  padding: 6px 4px;
+  border-bottom: 1px solid var(--rule-divider);
+  padding: 8px;
   text-align: left;
   vertical-align: middle;
   overflow-wrap: anywhere;
 }
-.pg-table th { font: 600 0.72rem/1.3 var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; }
-.pg-table td:last-child { font-family: var(--font-mono); font-size: 0.8rem; }
-
-/* Buttons and toggles: square, ruled, visible focus. */
-.pg .pg-button, .pg .pg-chip {
-  border: var(--border-width) solid var(--rule);
-  border-radius: var(--radius);
-  background: var(--paper);
-  color: var(--ink);
-  font: 600 0.85rem/1.2 var(--font-mono);
-  min-height: 44px;
-  padding: 8px 12px;
-  box-shadow: none;
-  white-space: normal;
-  text-align: left;
-}
-.pg .pg-chip { min-height: 36px; padding: 6px 8px; max-width: 100%; }
-.pg .pg-button:hover, .pg .pg-chip:hover { background: var(--surface); color: var(--ink); }
-.pg .pg-run {
-  background: var(--brand-yellow);
-  color: var(--brand-yellow-ink);
-  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--rule);
-}
-.pg .pg-run:hover { background: var(--brand-yellow); color: var(--brand-yellow-ink); text-decoration: underline; }
-.pg .pg-run:active { box-shadow: none; transform: translate(var(--shadow-offset), var(--shadow-offset)); }
-.pg .pg-stop[aria-disabled="true"], .pg .pg-stop[aria-disabled="true"]:hover {
-  border-style: dashed;
-  background: var(--paper);
+.pg-table th {
+  font: var(--type-label);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
   color: var(--ink-muted);
-  cursor: not-allowed;
+  padding-top: 4px;
 }
-.pg .pg-toggle[data-state="on"] { background: var(--ink); color: var(--paper); }
-.pg button:focus-visible, .pg a:focus-visible, .pg .pg-textarea:focus-visible, .pg-error-summary:focus {
-  outline: 3px solid var(--focus);
-  outline-offset: 2px;
-  box-shadow: none;
-}
+.pg-table tbody tr:nth-child(even) { background: var(--surface-raised); }
+.pg-expected { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.pg-table .pg-reason { font: var(--type-code); color: var(--ink-muted); }
+.pg-table .pg-summary { font: var(--type-small); color: var(--ink-muted); }
 
-.pg-controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 24px 0 6px; }
+/* Layout only: the ladder in src/style.css owns colour, borders and shadows. */
+.pg .pg-chip { max-width: 100%; white-space: normal; text-align: left; }
+.pg-reset { white-space: normal; }
+
+.pg-controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 24px 0 8px; }
 .pg-shortcut { margin: 0; font-size: 0.82rem; color: var(--ink-muted); }
-.pg-status { min-height: 1.5em; margin: 8px 0 16px; font-family: var(--font-mono); font-size: 0.85rem; overflow-wrap: anywhere; }
+/* A one-line echo of the run, a sentence: quiet body text, not code (the result card below has the detail). */
+.pg-status { min-height: 1.5em; margin: 8px 0 16px; font: var(--type-small); color: var(--ink-muted); overflow-wrap: anywhere; }
 
 .pg-error-summary {
   border: var(--border-width) solid var(--outcome-failed);
@@ -113,44 +115,54 @@
   padding: 12px 16px;
   margin: 0 0 16px;
 }
+.pg-error-summary:focus { outline: 3px solid var(--focus); outline-offset: 2px; }
 .pg-error-title { font: 600 1.05rem/1.3 var(--font-body); margin: 0 0 6px; color: var(--outcome-failed); }
 .pg-error-summary p { margin: 0 0 6px; }
 .pg-error-summary ul { margin: 0; padding-left: 20px; }
 .pg-error-summary a { color: var(--link); overflow-wrap: anywhere; }
 
+/* Result card: the head band carries the title, the tier label and the outcome badge. */
 .pg-result { overflow-wrap: anywhere; }
+.pg-result-head { background: var(--wash-magenta); }
+.pg-result-badges { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .pg-result p { margin: 0 0 8px; }
-.pg-tier {
-  display: inline-block;
-  font: 600 0.75rem/1.3 var(--font-mono);
+.pg-label {
+  font: var(--type-label);
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  border: var(--border-width) solid var(--rule);
-  padding: 2px 8px;
-  background: var(--paper);
+  color: var(--ink-muted);
+  margin: 0 0 6px;
 }
-.pg-outcome { display: flex; align-items: center; gap: 8px; font: 400 1.5rem/1.2 var(--font-display); margin: 8px 0 12px; }
-.pg-result[data-outcome="ok"] .pg-outcome { color: var(--outcome-ok); }
-.pg-result[data-outcome="denied"] .pg-outcome, .pg-result[data-outcome="cancelled"] .pg-outcome { color: var(--outcome-refused); }
-.pg-result[data-outcome="failed"] .pg-outcome { color: var(--outcome-failed); }
-.pg-label { font: 600 0.72rem/1.3 var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); }
-.pg-answer { font: 400 1.15rem/1.45 var(--font-display); border-left: var(--border-width) solid var(--rule); padding-left: 12px; }
+.pg-answer {
+  font: var(--type-voice);
+  border-left: var(--bar-width) solid var(--edge-magenta);
+  padding-left: 12px;
+}
+.pg-result .pg-answer { margin-bottom: 16px; }
+/* Operator view: a tint with a bar at its edge, so it still shows its edge in forced colours. */
 .pg-operator {
-  border: var(--border-width) solid var(--rule);
-  background: var(--outcome-refused-fill);
+  background: var(--surface-raised);
+  border-left: var(--bar-width) solid var(--rule);
   color: var(--ink);
-  padding: 12px;
-  margin: 12px 0;
+  padding: 12px 16px;
+  margin: 0 0 16px;
 }
-.pg-result[data-outcome="failed"] .pg-operator { border-color: var(--outcome-failed); }
+.pg-operator .pg-label:not(:first-child) { margin-top: 12px; }
+.pg-result .pg-operator p:last-child { margin-bottom: 0; }
+.pg-result[data-outcome="failed"] .pg-operator { border-left-color: var(--outcome-failed); }
 .pg-meta { font-size: 0.82rem; color: var(--ink-muted); }
 
 @media (max-width: 420px) {
-  .pg-block, .pg-result-wrap { padding: 12px; box-shadow: none; }
+  .pg-block-head, .pg-result-head { padding: 8px 12px; }
+  .pg-block-body, .pg-result-body { padding: 12px; }
+  .pg-table th, .pg-table td { padding: 6px; }
   .pg-controls { gap: 8px; }
   .pg .pg-textarea { font-size: 16px; } /* no zoom on focus in mobile browsers */
 }
+@media (forced-colors: active) {
+  /* Fills drop away: the head bands keep a visible edge under their title. */
+  .pg-block-head, .pg-result-head { border-bottom-color: CanvasText; }
+}
 @media (prefers-reduced-motion: reduce) {
   .pg *, .pg *::before, .pg *::after { transition: none !important; animation: none !important; }
-  .pg .pg-run:active { transform: none; }
 }

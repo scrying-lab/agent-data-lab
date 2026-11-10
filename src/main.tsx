@@ -1,6 +1,9 @@
 import './browser-init'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+// Space Grotesk (--font-ui), self-hosted. The package has no latin-only entry, so this is the weight
+// axis for all its subsets; unicode-range means a browser downloads only the latin file for this page.
+import '@fontsource-variable/space-grotesk/wght.css'
 import './tokens.css'
 import './style.css'
 import { App } from './App'

@@ -17,8 +17,9 @@ import fixtures from '../fixtures/executions.json'
 
 vi.mock('../src/announce', () => ({ announce: vi.fn() }))
 import { announce } from '../src/announce'
-import { TranslationPanel, verifiedBadge } from '../src/lessons/TranslationPanel'
-import { Elsewhere, inLabLabel } from '../src/lessons/Elsewhere'
+import { TranslationPanel, sideBySideQuery, verifiedBadge, verifiedDetail, verifiedLevel } from '../src/lessons/TranslationPanel'
+import { Elsewhere, disclaimer, inLabLabel, matchLevel, vendors } from '../src/lessons/Elsewhere'
+import { matchLabel } from '../content/hints'
 import { RunForReal, cloneUrl, fallbackCloneUrl, runCommands, liveCommands, noKeysSentence } from '../src/lessons/RunForReal'
 import { CompareModels, liveComparisons } from '../src/lessons/CompareModels'
 import { LessonGuide } from '../src/lessons/LessonGuide'
@@ -138,7 +139,8 @@ describe('Elsewhere hints', () => {
     render(<Elsewhere />)
     expect(screen.getByText('This lab is AWS-flavoured; here is the same idea elsewhere.')).toBeTruthy()
     for (const c of concepts) expect(screen.getByRole('heading', { level: 3, name: c.concept })).toBeTruthy()
-    const links = screen.getAllByRole('link')
+    // Sources sit in closed disclosures; they are still in the page, so include hidden subtrees.
+    const links = screen.getAllByRole('link', { hidden: true })
     for (const s of concepts.flatMap(c => c.sources)) {
       const link = links.find(a => a.getAttribute('href') === s.url)
       expect(link, s.url).toBeTruthy()
@@ -150,39 +152,244 @@ describe('Elsewhere hints', () => {
 
   it('heads the AWS column "On AWS" and speaks about the lab only in "What this lab uses" rows', () => {
     render(<Elsewhere />)
-    const terms = screen.getAllByRole('term').map(t => t.textContent)
+    const terms = screen.getAllByRole('term', { hidden: true }).map(t => t.textContent)
     expect(terms.filter(t => t === 'On AWS')).toHaveLength(concepts.length)
     expect(terms.filter(t => t === inLabLabel)).toHaveLength(concepts.filter(c => c.inLab).length)
     expect(inLabLabel).toBe('What this lab uses')
     expect(document.body.textContent).not.toMatch(/In this lab \(AWS\)/)
     expect(terms.some(t => /lab/i.test(t ?? '') && t !== inLabLabel)).toBe(false)
   })
+
+  it('opens with numeral 05 and keeps the disclaimer visible, outside every disclosure', () => {
+    const { container } = render(<Elsewhere />)
+    expect(screen.getByRole('heading', { level: 2, name: 'The same ideas on other platforms' })).toBeTruthy()
+    expect(container.querySelector('.lab-opener__numeral')?.textContent).toBe('05')
+    const line = screen.getByText(content => content.includes(disclaimer))
+    expect(line.closest('details')).toBeNull()
+    expect(line.textContent).toContain('“On AWS” means the equivalent on AWS, not something this lab runs on.')
+  })
+
+  it('states each match badge meaning once, with a full square for "Close match" and a half square for "Approximate"', () => {
+    const { container } = render(<Elsewhere />)
+    const label = screen.getByText('What the badges mean')
+    const legend = container.querySelector(`dl[aria-labelledby="${label.id}"]`)!
+    expect(legend.closest('details')).toBeNull()
+    expect(matchLevel).toEqual({ close: 'full', approximate: 'half', unconfirmed: 'none' })
+    for (const m of Object.keys(matchLabel) as (keyof typeof matchLabel)[]) {
+      const chip = within(legend as HTMLElement).getByText(matchLabel[m]).closest('.lsn-chip')
+      expect(chip?.getAttribute('data-level')).toBe(matchLevel[m])
+    }
+    for (const chip of container.querySelectorAll('.lsn-chip')) {
+      expect(chip.className).toBe('lsn-chip')
+      expect(chip.getAttribute('style')).toBeNull()
+    }
+  })
+
+  it('each concept card shows its badge, "What this lab uses" and "On AWS"; other platforms and sources wait in a closed disclosure', () => {
+    const { container } = render(<Elsewhere />)
+    const cards = [...container.querySelectorAll<HTMLElement>('li.lsn-concept')]
+    expect(cards).toHaveLength(concepts.length)
+    concepts.forEach((c, i) => {
+      const card = cards[i]
+      expect(within(card).getByRole('heading', { level: 3, name: c.concept })).toBeTruthy()
+      expect(within(card).getByText(matchLabel[c.match]).closest('.lsn-chip')).toBeTruthy()
+      const visibleTerms = [...card.querySelectorAll('.lsn-concept-body > dl dt')].map(t => t.textContent)
+      expect(visibleTerms).toEqual(c.inLab ? [inLabLabel, 'On AWS'] : ['On AWS'])
+      const more = card.querySelector('details')!
+      expect(more.open).toBe(false)
+      expect(more.querySelector('summary')?.textContent).toBe('Other platforms and sources')
+      const hiddenTerms = [...more.querySelectorAll('dt')].map(t => t.textContent)
+      expect(hiddenTerms).toEqual(vendors.slice(1).map(v => v.label))
+      for (const s of c.sources) expect(more.querySelector(`a[href="${s.url}"]`)?.textContent).toBe(s.title)
+    })
+  })
+
+  it('keeps the method note behind its own closed disclosure', () => {
+    const { container } = render(<Elsewhere />)
+    const method = [...container.querySelectorAll('details')].find(d => d.querySelector('summary')?.textContent === 'Where each row comes from')!
+    expect(method.open).toBe(false)
+    expect(method.textContent).toContain('Each vendor row was read from that vendor’s own documentation on 2026-11-09.')
+    expect(method.textContent).toContain('A row headed “What this lab uses” says what the lab itself uses and names the files that show it.')
+  })
 })
 
 describe('TranslationPanel', () => {
-  it('renders one focusable code region per source file, with the file’s text', () => {
-    render(<TranslationPanel />)
-    const regions = screen.getAllByRole('region').filter(r => /^(Python|TypeScript): /.test(r.getAttribute('aria-label') ?? ''))
+  // The pair switches layout at 768px. jsdom has no layout, so tests choose the width through matchMedia.
+  const withWidth = (wide: boolean) => {
+    const original = window.matchMedia
+    window.matchMedia = ((query: string) => ({
+      matches: wide && query === sideBySideQuery, media: query, onchange: null,
+      addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {}, dispatchEvent: () => false,
+    })) as unknown as typeof window.matchMedia
+    return () => { window.matchMedia = original }
+  }
+  const triggerOf = (pair: (typeof pairs)[number]) =>
+    within(screen.getByRole('article', { name: pair.title })).getByRole('button', { name: pair.title })
+
+  it('opens with the section numeral, kicker and h2, with the numeral hidden from assistive technology', () => {
+    const { container } = render(<TranslationPanel />)
+    expect(screen.getByRole('heading', { level: 2, name: 'Python → TypeScript' })).toBeTruthy()
+    expect(screen.getByText('For Python developers').tagName).toBe('P')
+    expect(container.querySelector('.lab-opener__numeral')?.getAttribute('aria-hidden')).toBe('true')
+    expect(container.querySelector('.lab-opener__numeral')?.textContent).toBe('04')
+  })
+
+  it('keeps one focusable code region per source file in the page, with the file’s text, even while closed', () => {
+    const { container } = render(<TranslationPanel />)
+    const regions = [...container.querySelectorAll('[role="region"]')].filter(r => /^(Python|TypeScript): /.test(r.getAttribute('aria-label') ?? ''))
     expect(regions).toHaveLength(pairs.length * 2)
     for (const pair of pairs) {
       for (const [lang, file] of [['Python', pair.pyFile], ['TypeScript', pair.tsFile]] as const) {
-        const region = screen.getByRole('region', { name: lang + ': ' + file })
-        expect(region.getAttribute('tabindex')).toBe('0')
-        expect(region.querySelector('pre > code')?.textContent).toBe(sourceOf(file))
+        const matching = regions.filter(r => r.getAttribute('aria-label') === lang + ': ' + file)
+        expect(matching, file).toHaveLength(1)
+        expect(matching[0].getAttribute('tabindex')).toBe('0')
+        expect(matching[0].querySelector('pre > code')?.textContent).toBe(sourceOf(file))
       }
     }
   })
 
-  it('shows what changes and the badge that matches each pair’s verification', () => {
+  it('keeps the heading outline: one h3 per pair and an h4 for each language', () => {
+    const { container } = render(<TranslationPanel />)
+    for (const pair of pairs) expect(screen.getByRole('heading', { level: 3, name: pair.title })).toBeTruthy()
+    const h4s = [...container.querySelectorAll('h4')].map(h => h.textContent)
+    expect(h4s.filter(t => t === 'Python')).toHaveLength(pairs.length)
+    expect(h4s.filter(t => t === 'TypeScript')).toHaveLength(pairs.length)
+  })
+
+  it('states each badge meaning once, above the pairs, and only for badges in use', () => {
     render(<TranslationPanel />)
-    for (const pair of pairs) {
-      const article = screen.getByRole('article', { name: pair.title })
-      expect(within(article).getByText(pair.whatChanges)).toBeTruthy()
-      expect(within(article).getByText(verifiedBadge[pair.verified])).toBeTruthy()
-      for (const other of Object.values(verifiedBadge).filter(b => b !== verifiedBadge[pair.verified])) {
-        expect(within(article).queryByText(other)).toBeNull()
-      }
+    const label = screen.getByText('What the badges mean')
+    expect(label.matches('h1, h2, h3, h4, h5, h6')).toBe(false)
+    const legend = document.querySelector(`dl[aria-labelledby="${label.id}"]`)!
+    expect(legend).toBeTruthy()
+    const used = [...new Set(pairs.map(p => p.verified))]
+    for (const v of Object.keys(verifiedBadge) as (keyof typeof verifiedBadge)[]) {
+      expect(screen.queryAllByText(verifiedDetail[v])).toHaveLength(used.includes(v) ? 1 : 0)
     }
+    expect(legend.compareDocumentPosition(screen.getByRole('list', { name: 'Python and TypeScript pairs' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('indexes every pair as a card with its title, evidence chip and what changes', () => {
+    render(<TranslationPanel />)
+    const cards = within(screen.getByRole('list', { name: 'Python and TypeScript pairs' })).getAllByRole('listitem')
+    expect(cards).toHaveLength(pairs.length)
+    pairs.forEach((pair, i) => {
+      const card = cards[i]
+      expect(within(card).getByRole('button', { name: pair.title })).toBeTruthy()
+      expect(within(card).getByText(pair.whatChanges)).toBeTruthy()
+      expect(within(card).getByText(verifiedBadge[pair.verified])).toBeTruthy()
+      for (const other of Object.values(verifiedBadge).filter(b => b !== verifiedBadge[pair.verified])) {
+        expect(within(card).queryByText(other)).toBeNull()
+      }
+    })
+  })
+
+  it('evidence chips are never coloured: a full square for "Runs in tests", a half square for "Type-checked"', () => {
+    const { container } = render(<TranslationPanel />)
+    expect(verifiedLevel).toEqual({ executed: 'full', compiled: 'half', 'names-only': 'none' })
+    const chips = [...container.querySelectorAll('.lsn-chip')]
+    expect(chips.length).toBeGreaterThan(pairs.length)
+    for (const chip of chips) {
+      const level = chip.getAttribute('data-level')
+      const glyph = chip.querySelector('svg')!
+      expect(glyph.getAttribute('aria-hidden')).toBe('true')
+      const filled = [...glyph.querySelectorAll('rect')].filter(r => r.getAttribute('fill') === 'currentColor')
+      expect(filled.map(r => r.getAttribute('width'))).toEqual(level === 'full' ? ['10.5'] : level === 'half' ? ['5.25'] : [])
+      expect(chip.getAttribute('style')).toBeNull()
+      expect(chip.className).toBe('lsn-chip')
+    }
+    for (const pair of pairs) {
+      const chip = within(screen.getByRole('article', { name: pair.title })).getByText(verifiedBadge[pair.verified]).closest('.lsn-chip')
+      expect(chip?.getAttribute('data-level')).toBe(verifiedLevel[pair.verified])
+    }
+  })
+
+  it('opens one pair at a time, starting with the first', () => {
+    render(<TranslationPanel />)
+    const [first, second] = pairs
+    expect(triggerOf(first).getAttribute('aria-expanded')).toBe('true')
+    for (const pair of pairs.slice(1)) expect(triggerOf(pair).getAttribute('aria-expanded')).toBe('false')
+    expect(screen.queryByRole('region', { name: 'Python: ' + second.pyFile })).toBeNull()
+    fireEvent.click(triggerOf(second))
+    expect(triggerOf(second).getAttribute('aria-expanded')).toBe('true')
+    expect(triggerOf(first).getAttribute('aria-expanded')).toBe('false')
+    expect(screen.getByRole('region', { name: 'Python: ' + second.pyFile })).toBeTruthy()
+    expect(screen.queryByRole('region', { name: 'Python: ' + first.pyFile })).toBeNull()
+  })
+
+  it('choosing a card opens its pair, marks the card current and moves focus to the pair’s heading button', async () => {
+    render(<TranslationPanel />)
+    const pair = pairs[3]
+    const card = within(screen.getByRole('list', { name: 'Python and TypeScript pairs' })).getByRole('button', { name: pair.title })
+    expect(card.getAttribute('aria-current')).toBeNull()
+    fireEvent.click(card)
+    await waitFor(() => expect(document.activeElement).toBe(triggerOf(pair)))
+    expect(triggerOf(pair).getAttribute('aria-expanded')).toBe('true')
+    expect(card.getAttribute('aria-current')).toBe('true')
+    expect(triggerOf(pairs[0]).getAttribute('aria-expanded')).toBe('false')
+    // Choosing the open pair again keeps it open and still moves focus.
+    card.focus()
+    fireEvent.click(card)
+    expect(document.activeElement).toBe(triggerOf(pair))
+    expect(triggerOf(pair).getAttribute('aria-expanded')).toBe('true')
+  })
+
+  it('below 768px, the open pair shows Python and TypeScript as tabs with one tab stop', () => {
+    const restore = withWidth(false)
+    try {
+      render(<TranslationPanel />)
+      const article = screen.getByRole('article', { name: pairs[0].title })
+      const tablist = within(article).getByRole('tablist', { name: 'Language for ' + pairs[0].title })
+      const [python, typescript] = within(tablist).getAllByRole('tab')
+      expect([python.textContent, typescript.textContent]).toEqual(['Python', 'TypeScript'])
+      expect(python.getAttribute('aria-selected')).toBe('true')
+      expect([python.tabIndex, typescript.tabIndex]).toEqual([0, -1])
+      expect(within(article).getByRole('region', { name: 'Python: ' + pairs[0].pyFile })).toBeTruthy()
+      expect(within(article).queryByRole('region', { name: 'TypeScript: ' + pairs[0].tsFile })).toBeNull()
+      // Arrow keys move the selection and the focus (automatic activation); the tab stop follows.
+      python.focus()
+      fireEvent.keyDown(python, { key: 'ArrowRight' })
+      expect(typescript.getAttribute('aria-selected')).toBe('true')
+      expect(document.activeElement).toBe(typescript)
+      expect([python.tabIndex, typescript.tabIndex]).toEqual([-1, 0])
+      expect(within(article).getByRole('region', { name: 'TypeScript: ' + pairs[0].tsFile })).toBeTruthy()
+      expect(within(article).queryByRole('region', { name: 'Python: ' + pairs[0].pyFile })).toBeNull()
+      fireEvent.keyDown(typescript, { key: 'Home' })
+      expect(python.getAttribute('aria-selected')).toBe('true')
+      fireEvent.click(typescript)
+      expect(typescript.getAttribute('aria-selected')).toBe('true')
+      // Each panel is named by its tab and, holding a focusable code region, is not a Tab stop itself.
+      for (const panel of article.querySelectorAll('[role="tabpanel"]')) {
+        expect(panel.hasAttribute('tabindex')).toBe(false)
+        expect(document.getElementById(panel.getAttribute('aria-labelledby')!)?.getAttribute('role')).toBe('tab')
+      }
+    } finally { restore() }
+  })
+
+  it('from 768px, the open pair shows Python and TypeScript side by side, without tabs', () => {
+    const restore = withWidth(true)
+    try {
+      render(<TranslationPanel />)
+      const article = screen.getByRole('article', { name: pairs[0].title })
+      expect(within(article).queryByRole('tablist')).toBeNull()
+      expect(within(article).getByRole('heading', { level: 4, name: 'Python' })).toBeTruthy()
+      expect(within(article).getByRole('heading', { level: 4, name: 'TypeScript' })).toBeTruthy()
+      expect(within(article).getByRole('region', { name: 'Python: ' + pairs[0].pyFile })).toBeTruthy()
+      expect(within(article).getByRole('region', { name: 'TypeScript: ' + pairs[0].tsFile })).toBeTruthy()
+    } finally { restore() }
+  })
+
+  it('colours code only through token classes and keeps the source text exact', () => {
+    const { container } = render(<TranslationPanel />)
+    const spans = [...container.querySelectorAll('.lsn-code span')]
+    expect(spans.length).toBeGreaterThan(0)
+    for (const span of spans) {
+      expect(span.className).toMatch(/^lsn-tok-(comment|string|keyword)$/)
+      expect(span.getAttribute('style')).toBeNull()
+    }
+    expect(container.querySelector('.lsn-tok-comment')).toBeTruthy()
+    expect(container.querySelector('.lsn-tok-string')).toBeTruthy()
+    expect(container.querySelector('.lsn-tok-keyword')).toBeTruthy()
   })
 
   it('lists every gotcha behind a disclosure and cites the workshop commit', () => {
@@ -246,6 +453,29 @@ describe('RunForReal', () => {
     const block = screen.getByRole('region', { name: 'Commands for a real model' })
     expect(block.querySelector('pre')?.textContent).toBe(liveCommands.join('\n'))
   })
+
+  it('puts the clone-and-run commands first, under a label, with Copy as the one primary button', () => {
+    const { container } = render(<RunForReal />)
+    expect(screen.getByRole('heading', { level: 2, name: 'Run it for real' })).toBeTruthy()
+    expect(container.querySelector('.lab-opener__numeral')?.textContent).toBe('06')
+    const step = screen.getByText('On your computer').parentElement!
+    expect(within(step).getByRole('region', { name: 'Commands to run the lab' })).toBeTruthy()
+    const copy = within(step).getByRole('button', { name: /copy commands to run the lab/i })
+    expect(copy.getAttribute('data-variant')).toBe('primary')
+    expect(screen.getByRole('button', { name: 'With a real model (your own AWS account)' }).getAttribute('data-variant')).toBe('tertiary')
+    const order = [step, screen.getByRole('button', { name: 'With a real model (your own AWS account)' })]
+    expect(order[0].compareDocumentPosition(order[1]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('the safety line is a "Why it matters" callout, after the commands', () => {
+    render(<RunForReal />)
+    const line = screen.getByText(noKeysSentence)
+    const callout = line.closest('.lab-callout')!
+    expect(callout.getAttribute('data-kind')).toBe('why')
+    expect(within(callout as HTMLElement).getByText('Why it matters').tagName).toBe('P')
+    const commands = screen.getByRole('region', { name: 'Commands to run the lab' })
+    expect(commands.compareDocumentPosition(callout) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
 })
 
 describe('CompareModels', () => {
@@ -306,5 +536,12 @@ describe('CompareModels', () => {
     expect(within(columns[1]).getByRole('heading', { level: 4, name: 'model-b' })).toBeTruthy()
     expect(document.body.textContent).not.toContain('Recorded replay')
     expect(document.body.textContent).not.toContain('model-c')
+    // Each column carries the one shared tier label, marked live, with its text unchanged.
+    for (const [column, run] of [[columns[0], a], [columns[1], b]] as const) {
+      const label = column.querySelector('.lab-tier')!
+      expect(label.getAttribute('data-tier')).toBe('live')
+      expect(label.textContent).toBe(tierLabel(run))
+    }
+    expect(document.querySelector('.lsn-kicker')).toBeNull()
   })
 })

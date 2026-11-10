@@ -1,5 +1,6 @@
 import { useId } from 'react'
 import { runSchema, tierLabel, type LabRun } from '../../agent/run-contract'
+import { TierLabel } from '../shell/primitives'
 import '../tokens.css'
 import './lessons.css'
 
@@ -50,10 +51,14 @@ function ComparisonView({ comparison }: { comparison: Comparison }) {
       <div className="lsn-compare-grid">
         {comparison.runs.map(run => (
           <article key={run.runId} className="lsn-compare-col" aria-label={tierLabel(run)}>
-            <span className="lsn-kicker">{tierLabel(run)}</span>
-            <h4>{run.provider.modelId}</h4>
-            <p><strong>Outcome:</strong> {outcomeWords[run.outcome.status]}{run.outcome.code ? ' · ' + run.outcome.code : ''}</p>
-            <p>{run.finalText}</p>
+            <div className="lsn-compare-head">
+              <TierLabel tier={run.tier}>{tierLabel(run)}</TierLabel>
+              <h4>{run.provider.modelId}</h4>
+            </div>
+            <div className="lsn-compare-body">
+              <p><strong>Outcome:</strong> {outcomeWords[run.outcome.status]}{run.outcome.code ? ' · ' + run.outcome.code : ''}</p>
+              <p>{run.finalText}</p>
+            </div>
           </article>
         ))}
       </div>
@@ -71,7 +76,7 @@ export function CompareModels({ runs, models }: { runs: readonly unknown[]; mode
   if (comparisons.length === 0) return null
 
   return (
-    <section className="lsn-panel" aria-labelledby={titleId}>
+    <section className="lsn-panel lsn-compare" aria-labelledby={titleId}>
       <h2 id={titleId}>Compare models</h2>
       <p>The same question, recorded with each model. You are reading recordings, not watching live calls.</p>
       {comparisons.map(c => <ComparisonView key={JSON.stringify([c.lesson, c.scenario, c.prompt])} comparison={c} />)}

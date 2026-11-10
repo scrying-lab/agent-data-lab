@@ -1,0 +1,24 @@
+/* StatTile: a tint marks the group; the left edge in the tone's edge colour keeps it bounded in forced colours. */
+.lab-stat {
+  --ls-wash: var(--wash-blue);
+  --ls-text: var(--text-blue);
+  --ls-edge: var(--edge-blue);
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  min-width: 0;
+  padding: 12px 16px;
+  border-left: var(--bar-width) solid var(--ls-edge);
+  background: var(--ls-wash);
+}
+.lab-stat[data-tone="magenta"] { --ls-wash: var(--wash-magenta); --ls-text: var(--text-magenta); --ls-edge: var(--edge-magenta); }
+.lab-stat__value {
+  color: var(--ls-text);
+  font: var(--type-stat);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.lab-stat__label { color: var(--ink-muted); font: var(--type-label); letter-spacing: var(--track-label); text-transform: uppercase; }
+
+@media (forced-colors: active) {
+  .lab-stat { border-left-color: CanvasText; }
+}

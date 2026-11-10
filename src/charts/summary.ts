@@ -74,6 +74,57 @@ export function weekSummary(result: Result): string {
     + `the quietest is ${dayName(bottom.group)} at ${clock(bottom.hour ?? 0)} with ${one(bottom.mean)} (n = ${count(bottom.n)})${gaps}, ${periodLabel(result.period)}.`
 }
 
+/**
+ * A headline number above the plot. `value` is formatted exactly as the summary sentence and the
+ * table format it, and `label` names what it is (kept short: it is set in the label role).
+ */
+export type Stat = { value: string; label: string }
+
+/** Each series' peak hour, the same points the summary sentence names. */
+export function hourlyStats(result: Result): Stat[] {
+  return HOURLY_SERIES.flatMap(series => {
+    const points = result.points.filter(p => p.group === series && p.hour !== null)
+    if (!points.length) return []
+    const peak = highest(points)
+    return [{ value: one(peak.mean), label: `${series} peak · ${clock(peak.hour ?? 0)}` }]
+  })
+}
+
+/** The highest and lowest weather category for the measure on show, as the summary sentence names them. */
+export function weatherStats(result: Result, measure: Measure = 'mean'): Stat[] {
+  if (!result.points.length) return []
+  const value = (p: Point) => measureOf(p, measure)
+  const top = highest(result.points, value)
+  const bottom = lowest(result.points, value)
+  const shown = (p: Point) => (measure === 'total' ? totalText(p) : one(p.mean))
+  const small = (p: Point) => (isSmallSample(p) ? ' · small sample' : '')
+  const [most, least] = measure === 'total' ? ['Most in total', 'Fewest in total'] : ['Highest', 'Lowest']
+  const stats = [{ value: shown(top), label: `${most} · ${top.group}${small(top)}` }]
+  if (bottom !== top) stats.push({ value: shown(bottom), label: `${least} · ${bottom.group}${small(bottom)}` })
+  return stats
+}
+
+/** The busiest and quietest hour of the week, as the summary sentence names them. */
+export function weekStats(result: Result): Stat[] {
+  const cells = result.points.filter(p => p.hour !== null && weekdays.includes(p.group))
+  if (!cells.length) return []
+  const top = highest(cells)
+  const bottom = lowest(cells)
+  const at = (p: Point) => `${dayName(p.group)} ${clock(p.hour ?? 0)}`
+  return [
+    { value: one(top.mean), label: `Busiest · ${at(top)}` },
+    { value: one(bottom.mean), label: `Quietest · ${at(bottom)}` },
+  ]
+}
+
+/** The headline numbers for any analytics result. */
+export function chartStats(result: Result, measure: Measure = 'mean'): Stat[] {
+  const scenario = scenarioOf(result)
+  if (scenario === 'weather') return weatherStats(result, measure)
+  if (scenario === 'week') return weekStats(result)
+  return hourlyStats(result)
+}
+
 /** The one-sentence summary for any analytics result: the chart's caption and aria-description. */
 export function chartSummary(result: Result, measure: Measure = 'mean'): string {
   const scenario = scenarioOf(result)

@@ -11,11 +11,23 @@ export type CodePointer = {
   what: string
 }
 
+export type Fact = {
+  /** A short label, at most three words. */
+  label: string
+  /** One or more whole sentences taken word for word from the summary. */
+  text: string
+}
+
 export type LessonContent = {
   id: Lesson
   title: string
   /** At most 80 words, for someone who has never written code. */
   summary: string
+  /**
+   * The summary's sentences, unchanged, grouped under short labels for the lesson's fact tiles.
+   * Together they hold every sentence of the summary exactly once (tests/shell.test.tsx checks it).
+   */
+  facts: Fact[]
   /** One question the visitor answers in their head before running. Ends with a question mark. */
   prediction: string
   /** Two or three steps for a newcomer. */
@@ -31,6 +43,12 @@ export const lessonContent: Record<Lesson, LessonContent> = {
     title: 'Ask the bike data a question',
     summary:
       'A small AI agent answers a question about real bike rentals in Washington, DC. It cannot open the data by itself: it has to ask for a tool. Before the tool runs, a gate checks that the tool fits the question, that the request has the right shape, and that a data read is still left. Only then is the data read and charted. What you watch is a saved recording made with a scripted stand-in for the AI model.',
+    facts: [
+      { label: 'Data', text: 'A small AI agent answers a question about real bike rentals in Washington, DC.' },
+      { label: 'Tools', text: 'It cannot open the data by itself: it has to ask for a tool.' },
+      { label: 'Order', text: 'Before the tool runs, a gate checks that the tool fits the question, that the request has the right shape, and that a data read is still left. Only then is the data read and charted.' },
+      { label: 'Recording', text: 'What you watch is a saved recording made with a scripted stand-in for the AI model.' },
+    ],
     prediction: 'If you block all data reads and play the same question, what will the agent say, and will any data be read?',
     beginner: [
       'Pick a question and play the recording. Follow the trace from the request to the written answer.',
@@ -56,6 +74,12 @@ export const lessonContent: Record<Lesson, LessonContent> = {
     title: 'Who may read what',
     summary:
       'An agent for an invented bike co-op, Northgate Cycle Co-op, can search its documents and look up its figures. All of this data is made up. Who is asking comes from the app, never from the AI, and each role may see different things. A gate checks every request in a fixed order before anything is read. A refusal is the system working as designed: nothing is read, and the AI is told one fixed sentence.',
+    facts: [
+      { label: 'Who asks', text: 'Who is asking comes from the app, never from the AI, and each role may see different things.' },
+      { label: 'Order', text: 'A gate checks every request in a fixed order before anything is read.' },
+      { label: 'Refusal', text: 'A refusal is the system working as designed: nothing is read, and the AI is told one fixed sentence.' },
+      { label: 'Data', text: 'An agent for an invented bike co-op, Northgate Cycle Co-op, can search its documents and look up its figures. All of this data is made up.' },
+    ],
     prediction: 'If the AI asks for a figure on behalf of a guest, at which check do you expect the gate to stop it?',
     beginner: [
       'Read the five checks in order: allowed tool, correct shape, known caller, permitted arguments, read budget. The first check that fails stops the request.',

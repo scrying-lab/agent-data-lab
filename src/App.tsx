@@ -25,7 +25,7 @@ export type AppProps = {
 }
 
 /**
- * The whole page, in reading order: header, hero, the label guide, the two lessons, the Python to
+ * The whole page, in reading order: header, hero (with the 01-06 index), the label guide, the two lessons, the Python to
  * TypeScript translation, the same ideas elsewhere, how to run it for real, credits and footer.
  * The one live region (Announcer) sits here, outside every keyed subtree.
  */
@@ -37,8 +37,8 @@ export function App({ governance, governancePlayground, analyticsRuns, governanc
       <Announcer />
       <SiteHeader />
       <main id={LAB_ID} tabIndex={-1} className="shell-main">
-        <Hero hasPlayground={governancePlayground != null} />
-        <LabelGuide />
+        <Hero />
+        <LabelGuide hasPlayground={governancePlayground != null} />
         <GovernanceLesson controller={controller} playground={governancePlayground} runs={governanceRuns} />
         <AnalyticsLesson runs={analyticsRuns} />
         <div id="python-to-typescript" className="shell-section shell-panel">

@@ -4,10 +4,17 @@
 // Accessibility notes: Tab is never bound (indentWithTab is not used), so Tab always leaves the
 // editor. The editable element carries the label, the description ids and aria-invalid. Colours
 // come from CSS variables, so the editor follows the page's light and dark themes.
+//
+// Highlighting uses a small tokenizer for the blocks' data (comments, quoted text, names before a
+// colon, numbers), not the JavaScript grammar: to JavaScript, { role: 'guest', readsLeft: 1 } is a
+// statement block, so its names came out as a label and a variable. The tokenizer only colours
+// text; src/playground/parse.ts still decides what the text means. @codemirror/language and
+// @lezer/highlight are declared as direct dependencies at the versions already in the lockfile.
 import { Compartment, EditorState } from '@codemirror/state'
 import { EditorView, keymap } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
-import { javascript } from '@codemirror/lang-javascript'
+import { HighlightStyle, StreamLanguage, syntaxHighlighting, type StringStream } from '@codemirror/language'
+import { tags } from '@lezer/highlight'
 
 export type CodeEditorAttributes = Record<string, string>
 export type CodeEditorOptions = {
@@ -25,10 +32,12 @@ export type CodeEditor = {
   destroy(): void
 }
 
+// The editor sits on the raised surface (lighter than the page in dark, as elevation should be),
+// inside a 2px rule: an input.
 const theme = EditorView.theme({
   '&': {
     color: 'var(--ink)',
-    backgroundColor: 'var(--paper)',
+    backgroundColor: 'var(--surface-raised)',
     border: 'var(--border-width) solid var(--rule)',
     fontFamily: 'var(--font-mono)',
     fontSize: '0.9rem',
@@ -44,6 +53,58 @@ const theme = EditorView.theme({
   '.cm-content ::selection': { backgroundColor: 'color-mix(in srgb, var(--focus) 30%, transparent)' },
 })
 
+/**
+ * Token colours, all CSS variables, so both themes follow tokens.css. Every pair is contrast-tested
+ * there against --surface-raised (at least 4.5:1): comments muted, text values in --text-blue,
+ * names (keys) in --text-magenta, everything else ink. Comments are also italic and keys bold, so
+ * colour is never the only difference.
+ */
+export const tokenStyle = HighlightStyle.define([
+  { tag: tags.comment, color: 'var(--ink-muted)', fontStyle: 'italic' },
+  { tag: tags.string, color: 'var(--text-blue)' },
+  { tag: tags.propertyName, color: 'var(--text-magenta)', fontWeight: '600' },
+  { tag: [tags.number, tags.variableName], color: 'var(--ink)' },
+  { tag: tags.punctuation, color: 'var(--ink-muted)' },
+])
+
+type DataState = { inComment: boolean }
+
+/** Reads to the end of a block comment, or to the end of the line if it carries on. */
+function blockComment(stream: StringStream, state: DataState): string {
+  if (stream.skipTo('*/')) { stream.match('*/'); state.inComment = false }
+  else stream.skipToEnd()
+  return 'comment'
+}
+
+/** The blocks' data: JSON5-like objects and lists with line and block comments. Token names map to @lezer/highlight tags. */
+export const blockData = StreamLanguage.define<DataState>({
+  name: 'lab-block-data',
+  startState: () => ({ inComment: false }),
+  copyState: state => ({ ...state }),
+  token(stream, state) {
+    if (state.inComment) return blockComment(stream, state)
+    if (stream.eatSpace()) return null
+    if (stream.match('//')) { stream.skipToEnd(); return 'comment' }
+    if (stream.match('/*')) { state.inComment = true; return blockComment(stream, state) }
+    const quote = stream.peek()
+    if (quote === "'" || quote === '"' || quote === '`') {
+      stream.next()
+      let escaped = false
+      for (let ch = stream.next(); ch != null; ch = stream.next()) {
+        if (ch === quote && !escaped) break
+        escaped = !escaped && ch === '\\'
+      }
+      return 'string'
+    }
+    if (stream.match(/^[A-Za-z_$][\w$]*(?=\s*:)/)) return 'propertyName'
+    if (stream.match(/^[+-]?\.?\d[\w.]*/)) return 'number'
+    if (stream.match(/^[A-Za-z_$][\w$]*/)) return 'variableName'
+    stream.next()
+    return 'punctuation'
+  },
+  languageData: { commentTokens: { line: '//', block: { open: '/*', close: '*/' } } },
+})
+
 export function createCodeEditor(options: CodeEditorOptions): CodeEditor {
   const attributes = new Compartment()
   let applyingExternal = false
@@ -55,7 +116,8 @@ export function createCodeEditor(options: CodeEditorOptions): CodeEditor {
         // Run comes first so it wins over defaultKeymap's Mod-Enter (insertBlankLine).
         keymap.of([{ key: 'Mod-Enter', run: () => { options.onRun(); return true } }, ...defaultKeymap, ...historyKeymap]),
         history(),
-        javascript(),
+        blockData,
+        syntaxHighlighting(tokenStyle),
         EditorView.lineWrapping,
         theme,
         attributes.of(EditorView.contentAttributes.of(options.attributes)),

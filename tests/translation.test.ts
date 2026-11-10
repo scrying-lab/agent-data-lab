@@ -12,6 +12,7 @@ import { lookupCustomer, toolDemo } from '../examples/ts/tool'
 import { budgetDemo } from '../examples/ts/budget-hook'
 import { invokeOnce, streamEvents } from '../examples/ts/invoke-stream'
 import { steeringDemo } from '../examples/ts/steering'
+import { tokenize } from '../src/lessons/highlight'
 
 const root = new URL('..', import.meta.url).pathname
 const sdkRoot = join(root, 'node_modules/@strands-agents/sdk')
@@ -159,5 +160,29 @@ describe('gotchas', () => {
 
   it('the installed SDK is the version the examples were written for', () => {
     expect(JSON.parse(readFileSync(join(sdkRoot, 'package.json'), 'utf8')).version).toBe('1.24.0')
+  })
+})
+
+describe('code colouring on the page', () => {
+  it('every listing keeps its exact text when split into coloured tokens', () => {
+    for (const pair of pairs) {
+      for (const [file, language] of [[pair.pyFile, 'python'], [pair.tsFile, 'typescript']] as const) {
+        const tokens = tokenize(sourceOf(file), language)
+        expect(tokens.map(t => t.text).join(''), file).toBe(sourceOf(file))
+        expect(tokens.some(t => t.kind === 'keyword'), file).toBe(true)
+      }
+    }
+  })
+
+  it('marks comments, strings and keywords, and leaves names alone', () => {
+    expect(tokenize('def f(x):  # note\n    return "a#b"', 'python')).toEqual([
+      { text: 'def', kind: 'keyword' }, { text: ' f(x):  ' }, { text: '# note', kind: 'comment' },
+      { text: '\n    ' }, { text: 'return', kind: 'keyword' }, { text: ' ' }, { text: '"a#b"', kind: 'string' },
+    ])
+    expect(tokenize("const url = 'http://x' // why\nreturned", 'typescript')).toEqual([
+      { text: 'const', kind: 'keyword' }, { text: ' url = ' }, { text: "'http://x'", kind: 'string' },
+      { text: ' ' }, { text: '// why', kind: 'comment' }, { text: '\nreturned' },
+    ])
+    expect(tokenize('print(f"{name}") """doc\nmore"""', 'python').filter(t => t.kind === 'string').map(t => t.text)).toEqual(['f"{name}"', '"""doc\nmore"""'])
   })
 })

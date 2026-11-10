@@ -1,0 +1,27 @@
+/* OutcomeBadge: fill, 2px border in the outcome colour, icon and word. Cancelled is muted and dashed, distinct from refused. */
+.lab-outcome {
+  --lo-ink: var(--outcome-ok);
+  --lo-fill: var(--outcome-ok-fill);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 2px 10px 2px 8px;
+  border: var(--border-width) solid var(--lo-ink);
+  border-radius: var(--radius);
+  background: var(--lo-fill);
+  color: var(--lo-ink);
+  font: var(--type-outcome);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.lab-outcome svg { width: 16px; height: 16px; flex: none; }
+.lab-outcome[data-status="denied"] { --lo-ink: var(--outcome-refused); --lo-fill: var(--outcome-refused-fill); }
+.lab-outcome[data-status="failed"] { --lo-ink: var(--outcome-failed); --lo-fill: var(--outcome-failed-fill); }
+.lab-outcome[data-status="cancelled"] { --lo-ink: var(--outcome-cancelled); --lo-fill: var(--outcome-cancelled-fill); border-style: dashed; }
+
+@media (forced-colors: active) {
+  .lab-outcome { border-color: CanvasText; color: CanvasText; background: Canvas; }
+}

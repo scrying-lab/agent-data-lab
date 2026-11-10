@@ -3,9 +3,8 @@
 //
 // Mount it once: <Playground onRun={run => …} />. It renders its own <section> with an h2.
 import { useEffect, useId, useRef, useState } from 'react'
-import { Code, Play, RotateCcw, Square } from 'lucide-react'
+import { Play, RotateCcw, Square, SquareCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Toggle } from '@/components/ui/toggle'
 import { announce } from '../announce'
 import type { LabRun } from '../../agent/run-contract'
 import { applyChip, blockIds, playgroundBlocks, textsWith, type BlockChip, type BlockId, type PlaygroundBlock } from '../../content/block-hints'
@@ -120,6 +119,12 @@ export function Playground({ onRun, runner: injected, loadEditor }: PlaygroundPr
       <p className="pg-lede">
         Edit a block, often by one word, then press Run. The real Strands agent loop and its gate run here in your browser; a script plays the model, so nothing leaves the page.
       </p>
+      {/* One editor preference for both blocks, so it sits once above them, not inside each block. */}
+      <div className="pg-blocks-head">
+        <Button type="button" variant="toggle" className="pg-toggle" aria-pressed={plainText} onClick={() => togglePlainText(!plainText)}>
+          {plainText ? <SquareCheck aria-hidden="true" /> : <Square aria-hidden="true" />} Plain text editor
+        </Button>
+      </div>
       <div className="pg-blocks">
         {blockIds.map(id => {
           const block = playgroundBlocks.find(b => b.id === id)!
@@ -143,7 +148,7 @@ export function Playground({ onRun, runner: injected, loadEditor }: PlaygroundPr
         })}
       </div>
       <div className="pg-controls">
-        <Button type="button" className="pg-button pg-run" onClick={() => { void start() }} onFocus={prefetch} onPointerEnter={prefetch}>
+        <Button type="button" variant="primary" className="pg-run" onClick={() => { void start() }} onFocus={prefetch} onPointerEnter={prefetch}>
           <Play aria-hidden="true" /> Run
         </Button>
         {/* One slot, always mounted: Cancel while running, Retry after a failure or cancel, and an
@@ -151,8 +156,9 @@ export function Playground({ onRun, runner: injected, loadEditor }: PlaygroundPr
             would drop keyboard focus to the page; this one keeps it. */}
         <Button
           type="button"
-          variant="outline"
-          className="pg-button pg-stop"
+          variant="cancel"
+          className="pg-stop"
+          data-action={phase === 'stopped' ? 'retry' : 'cancel'}
           aria-disabled={phase === 'running' || phase === 'stopped' ? undefined : true}
           onClick={() => {
             if (phase === 'running') runner.cancel()
@@ -163,17 +169,13 @@ export function Playground({ onRun, runner: injected, loadEditor }: PlaygroundPr
             ? <><RotateCcw aria-hidden="true" /> Retry</>
             : <><Square aria-hidden="true" /> Cancel</>}
         </Button>
-        <Toggle variant="outline" className="pg-button pg-toggle" pressed={plainText} onPressedChange={togglePlainText}>
-          <Code aria-hidden="true" /> Plain text editor
-        </Toggle>
       </div>
       <p className="pg-shortcut">Shortcut: Ctrl+Enter (Cmd+Enter on a Mac) inside a block runs it.</p>
       <p className="pg-status">{status}</p>
       <ErrorSummary ref={summaryRef} items={summaryItems} titleId={`${prefix}-errors`} />
       {run && (
         <div className="pg-result-wrap" aria-labelledby={`${prefix}-result`} role="group">
-          <h3 id={`${prefix}-result`} className="pg-block-title">Result</h3>
-          <RunResult run={run} />
+          <RunResult run={run} titleId={`${prefix}-result`} />
         </div>
       )}
     </section>

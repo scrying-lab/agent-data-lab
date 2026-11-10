@@ -4,8 +4,9 @@ import { weekdays, type Point, type Result } from '../../analytics/contracts'
 import { ChartFigure, type Provenance } from './ChartFigure'
 import { PlotMount } from './PlotMount'
 import { useChartColors } from './hooks'
-import { MEAN_UNIT, clock, count, one, sourceLabel } from './format'
-import { HOURS, weekSummary } from './summary'
+import { schemeStart } from './contrast'
+import { MEAN_UNIT, PLOT_STYLE, clock, count, one, sourceLabel } from './format'
+import { HOURS, weekStats, weekSummary } from './summary'
 
 /**
  * The fixed colour scale: 0 to just above the busiest hour of the week in any period the lab
@@ -18,6 +19,16 @@ export const DEFAULT_WEEK_DOMAIN: readonly [number, number] = [0, 680.9]
 type Cell = { day: string; hour: number; point: Point | null }
 const SVG = 'http://www.w3.org/2000/svg'
 
+/** Plot's cividis interpolator on [0, 1]: dark blue through grey to yellow, lighter all the way. */
+const CIVIDIS = Plot.scale({ color: { type: 'linear', scheme: 'cividis', domain: [0, 1] } }).interpolate as (t: number) => string
+
+/**
+ * Cividis starting at `start` instead of 0. On the dark page the darkest blue (about 1.2:1 on the
+ * paper) would make the quiet small hours vanish, so the scheme starts where it reaches 3:1; on the
+ * light page `start` is 0 and the scheme is unchanged. The legend uses the same scale.
+ */
+export const cividisFrom = (start: number) => (t: number): string => CIVIDIS(start + (1 - start) * t)
+
 /** The colour scale in use, and whether it differs from the fixed default. Data above the top extends it. */
 export function effectiveDomain(result: Result, domain: readonly [number, number]) {
   const max = Math.max(...result.points.map(p => p.mean))
@@ -29,6 +40,7 @@ export function effectiveDomain(result: Result, domain: readonly [number, number
 /**
  * Seven rows (Sun–Sat), 24 hour columns, Plot's cividis scheme on a fixed domain.
  * Hours with no observations are drawn with a diagonal hatch and read "No data" in the table: never zero.
+ * The scheme's low end is lifted on a dark page so that every observed cell stays visible (cividisFrom).
  */
 export function WeekHeatmap({ result, provenance, domain = DEFAULT_WEEK_DOMAIN }: {
   result: Result
@@ -45,7 +57,8 @@ export function WeekHeatmap({ result, provenance, domain = DEFAULT_WEEK_DOMAIN }
     day, hour, point: result.points.find(p => p.group === day && p.hour === hour) ?? null,
   }))), [result])
   const missing = cells.filter(c => !c.point).length
-  const color = useMemo<Plot.ScaleOptions>(() => ({ type: 'linear', scheme: 'cividis', domain: [low, high], clamp: true }), [low, high])
+  const start = useMemo(() => schemeStart(CIVIDIS, colors.paper), [colors.paper])
+  const color = useMemo<Plot.ScaleOptions>(() => ({ type: 'linear', interpolate: cividisFrom(start), domain: [low, high], clamp: true }), [low, high, start])
 
   const render = useCallback((width: number) => {
     const narrow = width < 480
@@ -83,7 +96,7 @@ export function WeekHeatmap({ result, provenance, domain = DEFAULT_WEEK_DOMAIN }
       marginTop: 8,
       marginBottom: 40,
       padding: 0,
-      style: { background: 'transparent', color: 'currentColor', fontFamily: 'var(--font-mono)', fontSize: '11px' },
+      style: PLOT_STYLE,
       x: { label: 'Hour of day', domain: HOURS, ticks: narrow ? [0, 6, 12, 18, 23] : [0, 3, 6, 9, 12, 15, 18, 21, 23], labelAnchor: 'center', labelArrow: 'none' },
       y: { label: null, domain: weekdays },
       color,
@@ -106,12 +119,13 @@ export function WeekHeatmap({ result, provenance, domain = DEFAULT_WEEK_DOMAIN }
       marginRight: 20,
       marginTop: 4,
       marginBottom: 24,
-      style: { background: 'transparent', color: 'currentColor', fontFamily: 'var(--font-mono)', fontSize: '11px' },
+      style: PLOT_STYLE,
       x: { domain: [low, high], ticks: 4, label: null },
       y: { axis: null, domain: [0, 1] },
       color,
-      marks: [Plot.rect(steps, { x1: 'a', x2: 'b', y1: 0, y2: 1, fill: (s: { a: number; b: number }) => (s.a + s.b) / 2 })],
-      ariaLabel: `Colour key: dark blue is ${one(low)}, yellow is ${one(high)} ${MEAN_UNIT}`,
+      // crispEdges: no anti-aliased seams between the 64 steps of the ramp.
+      marks: [Plot.rect(steps, { x1: 'a', x2: 'b', y1: 0, y2: 1, fill: (s: { a: number; b: number }) => (s.a + s.b) / 2, shapeRendering: 'crispEdges' })],
+      ariaLabel: `Colour key: blue is ${one(low)}, yellow is ${one(high)} ${MEAN_UNIT}`,
     })
   }, [low, high, color])
 
@@ -122,6 +136,7 @@ export function WeekHeatmap({ result, provenance, domain = DEFAULT_WEEK_DOMAIN }
       summary={summary}
       source={sourceLabel(result.period)}
       provenance={provenance}
+      stats={weekStats(result)}
       tableLabel="Day and hour numbers, scrollable"
       table={
         <table className="lab-chart__table lab-chart__table--grid">

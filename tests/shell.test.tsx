@@ -5,7 +5,8 @@ import { join } from 'node:path'
 import { act, cleanup, fireEvent, render, within } from '@testing-library/react'
 import { tierLabel, type LabRun } from '../agent/run-contract'
 import { App } from '../src/App'
-import { analyticsRuns, exampleName, governanceExamples, governanceRuns, parseRuns, useLessonRun, type LessonRunController } from '../src/shell'
+import { lessonContent, lessonList } from '../content/lessons'
+import { analyticsRuns, baseLabel, exampleName, governanceExamples, governanceRuns, parseRuns, sectionIndex, useLessonRun, type LessonRunController } from '../src/shell'
 import { readStoredTheme, THEME_KEY } from '../src/shell/theme'
 
 const TIER_WORDS = /Recorded replay|Simulated in your browser|Recorded live run/g
@@ -74,7 +75,9 @@ describe('page shell', () => {
       expect(cards).toHaveLength(2)
       for (const card of cards) {
         expect(card.textContent!.match(TIER_WORDS), card.textContent!).toHaveLength(1)
-        expect(card.querySelectorAll('.shell-tier')).toHaveLength(1)
+        expect(card.querySelectorAll('.lab-tier')).toHaveLength(1)
+        expect(card.querySelector('.shell-result__head .lab-tier')).toBeTruthy()
+        expect(card.querySelectorAll('.shell-result__head .lab-outcome')).toHaveLength(1)
         expect(within(card).getByRole('link', { name: 'Run this yourself' }).getAttribute('href')).toBe('#run-for-real')
       }
     }
@@ -85,7 +88,7 @@ describe('page shell', () => {
     }
     fireEvent.click(radio(analyticsSection(), 'Block all reads'))
     check()
-  })
+  }, 60_000) // ten whole-page re-renders; under heavy machine load this alone took 44 s
 
   it('explains a refusal: stage, code, the operator sentence and a production note', () => {
     render(<App />)
@@ -201,22 +204,158 @@ describe('lesson state', () => {
   })
 
   it('never says the page is recordings only once the playground is mounted', () => {
+    // The provenance sentence lives in the 01 opener; the hero keeps one lede.
+    const labelsOpener = () => document.querySelector('#labels .lab-opener')!.textContent!
     const hero = () => document.querySelector('.shell-hero')!.textContent!
     const footer = () => document.querySelector('.shell-footer')!.textContent!
     const { unmount } = render(<App />)
-    expect(hero()).toContain('saved recordings')
-    expect(hero()).not.toContain('simulated model')
+    expect(labelsOpener()).toContain('saved recordings')
+    expect(labelsOpener()).not.toContain('simulated model')
+    expect(hero()).not.toMatch(/saved recordings|simulated model/)
+    expect(document.querySelectorAll('.shell-hero__lede')).toHaveLength(1)
     expect(footer()).toContain('No AI model is called on this page.')
     unmount()
 
     render(<App governancePlayground={<p>Playground goes here</p>} />)
-    expect(hero()).toContain('no AI model is called here')
-    expect(hero()).toContain('the playground runs that same code just now, with a simulated model')
-    expect(hero()).not.toMatch(/runs in your browser from saved recordings/)
+    expect(labelsOpener()).toContain('no AI model is called here')
+    expect(labelsOpener()).toContain('the playground runs that same code just now, with a simulated model')
+    expect(labelsOpener()).not.toMatch(/runs in your browser from saved recordings/)
+    expect(hero()).not.toMatch(/saved recordings|recordings only/i)
     expect(footer()).not.toMatch(/recordings only/i)
     const description = readFileSync(join(process.cwd(), 'index.html'), 'utf8').match(/name="description" content="([^"]*)"/)![1]
     expect(description).not.toMatch(/recorded runs play|recordings only/i)
     expect(description).toContain('no AI model is called on this page')
+  })
+})
+
+describe('page structure (v1.1)', () => {
+  const headingTexts = () => [...document.querySelectorAll('h1, h2, h3, h4, h5, h6')].map(h => h.textContent!.trim())
+
+  it('the hero is followed by an index of the six numbered sections, each pointing at a section on the page', () => {
+    render(<App />)
+    const nav = document.querySelector('.shell-hero nav[aria-label="Sections"]')!
+    expect(nav).toBeTruthy()
+    const chips = [...nav.querySelectorAll('a')]
+    expect(chips.map(a => a.querySelector('.shell-index__num')!.textContent)).toEqual(['01', '02', '03', '04', '05', '06'])
+    expect(chips.map(a => a.getAttribute('href'))).toEqual(sectionIndex.map(s => s.href))
+    for (const chip of chips) {
+      expect(document.getElementById(chip.getAttribute('href')!.slice(1)), chip.textContent!).toBeTruthy()
+      // The numeral is decoration; the accessible name is the section name.
+      expect(chip.querySelector('.shell-index__num')!.getAttribute('aria-hidden')).toBe('true')
+    }
+    // Every navigation landmark has its own name.
+    const names = [...document.querySelectorAll('nav')].map(n => n.getAttribute('aria-label') ?? document.getElementById(n.getAttribute('aria-labelledby')!)!.textContent)
+    expect(new Set(names).size).toBe(names.length)
+  })
+
+  it('opens the labels, both lessons and the credits with a section opener; only credits has no numeral', () => {
+    render(<App />)
+    const expected: [string, string | null][] = [['labels', '01'], ['lesson-governance', '02'], ['lesson-analytics', '03'], ['credits', null]]
+    for (const [id, numeral] of expected) {
+      const opener = document.getElementById(id)!.querySelector('.lab-opener')!
+      expect(opener, id).toBeTruthy()
+      expect(opener.querySelector('h2'), id).toBeTruthy()
+      expect(opener.querySelector('.lab-opener__numeral')?.textContent ?? null, id).toBe(numeral)
+      // Kickers and numerals are never headings.
+      const kicker = opener.querySelector('.lab-opener__kicker')!
+      expect(kicker.tagName, id).toBe('P')
+      expect(headingTexts()).not.toContain(kicker.textContent!.trim())
+    }
+    expect(document.querySelector('#lesson-governance .lab-opener__kicker')!.textContent).toBe('Lesson 1 · Governance')
+    expect(document.querySelector('#lesson-analytics .lab-opener__kicker')!.textContent).toBe('Lesson 2 · Analytics')
+  })
+
+  it('shows the three labels in three tinted columns, with the live note in the live column', () => {
+    render(<App />)
+    const items = [...document.querySelectorAll<HTMLElement>('#labels .shell-labels__item')]
+    expect(items.map(i => i.dataset.tier)).toEqual(['replay', 'simulated', 'live'])
+    for (const item of items) {
+      const labels = item.querySelectorAll<HTMLElement>('.lab-tier')
+      expect(labels).toHaveLength(1)
+      expect(labels[0].dataset.tier).toBe(item.dataset.tier)
+      expect(labels[0].textContent).toBe(baseLabel(item.dataset.tier as 'replay' | 'simulated' | 'live'))
+    }
+    expect(items[2].textContent).toContain('Live recordings with real models are planned for a later release')
+    expect(items[0].textContent).not.toContain('Live recordings with real models')
+    expect(document.querySelector('#labels')!.textContent!.match(/Live recordings with real models/g)).toHaveLength(1)
+  })
+
+  it.each(lessonList)('$id: the fact tiles hold every sentence of the summary, word for word, once', lesson => {
+    const facts = [...lesson.facts].sort((a, b) => lesson.summary.indexOf(a.text) - lesson.summary.indexOf(b.text))
+    for (const fact of lesson.facts) expect(lesson.summary).toContain(fact.text)
+    expect(facts.map(f => f.text).join(' ')).toBe(lesson.summary)
+    expect(new Set(lesson.facts.map(f => f.label)).size).toBe(lesson.facts.length)
+  })
+
+  it('renders each lesson summary as fact tiles, then the predict callout', () => {
+    render(<App />)
+    expect(lessonContent.governance.facts.map(f => f.label)).toEqual(['Who asks', 'Order', 'Refusal', 'Data'])
+    for (const [section, lesson] of [[governanceSection(), lessonContent.governance], [analyticsSection(), lessonContent.analytics]] as const) {
+      const tiles = [...section.querySelectorAll('.shell-facts > .shell-fact')]
+      expect(tiles.map(t => t.querySelector('dt')!.textContent)).toEqual(lesson.facts.map(f => f.label))
+      expect(tiles.map(t => t.querySelector('dd')!.textContent)).toEqual(lesson.facts.map(f => f.text))
+      const predict = section.querySelector('.lab-callout[data-kind="predict"]')!
+      expect(predict.textContent).toContain('Before you look, predict')
+      expect(predict.textContent).toContain(lesson.prediction)
+      expect(section.querySelector('.shell-facts')!.compareDocumentPosition(predict) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    }
+  })
+
+  it('puts the playground in a "Try it yourself" zone tinted Simulated, and the saved runs in a Replay zone', () => {
+    render(<App governancePlayground={<p>Playground goes here</p>} />)
+    const zones = [...governanceSection().querySelectorAll<HTMLElement>('.shell-zone')]
+    expect(zones).toHaveLength(2)
+    const [tryIt, watch] = zones
+    expect(tryIt.dataset.tier).toBe('simulated')
+    expect(tryIt.querySelector('.shell-zone__kicker')!.textContent).toBe('Try it yourself')
+    // Zones carry a kicker and a tint, never a tier label of their own: each result has one label.
+    expect(tryIt.querySelector(':scope > .shell-zone__head .lab-tier')).toBeNull()
+    expect(within(tryIt).getByText('Playground goes here')).toBeTruthy()
+
+    expect(watch.dataset.tier).toBe('replay')
+    expect(watch.querySelector('.shell-zone__kicker')!.textContent).toBe('Watch saved runs')
+    expect(watch.querySelector(':scope > .shell-zone__head .lab-tier')).toBeNull()
+    // The result card holds the run's one label; the trace under it does not repeat it.
+    expect(watch.querySelectorAll('.lab-tier')).toHaveLength(1)
+    expect(watch.querySelector('article.shell-result .lab-tier')!.textContent).toBe('Recorded replay')
+    // In order: the selector, then the result card, then the trace.
+    const select = within(watch).getByLabelText('Recorded example')
+    const card = watch.querySelector('article.shell-result')!
+    const trace = watch.querySelector('section.trace')!
+    expect(select.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(card.compareDocumentPosition(trace) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('never labels the visitor\'s own simulated run as a saved run', () => {
+    let controller: LessonRunController | undefined
+    function Harness() {
+      const governance = useLessonRun()
+      controller = governance
+      return <App governance={governance} governancePlayground={<p>Playground goes here</p>} />
+    }
+    render(<Harness />)
+    const base = governanceRuns.find(r => r.scenario === 'gov-default')!
+    act(() => { controller!.show({ ...base, runId: 'gov-default-run-2', tier: 'simulated', recordedAt: null }) })
+    const watch = governanceSection().querySelectorAll<HTMLElement>('.shell-zone')[1]
+    expect(watch.dataset.tier).toBe('simulated')
+    expect(watch.querySelector('.shell-zone__kicker')!.textContent).toBe('Your own run')
+    expect(watch.querySelector(':scope > .shell-zone__head')!.textContent).not.toMatch(/Recorded replay|Watch saved runs/)
+    expect(resultCards()[0].dataset.tier).toBe('simulated')
+  })
+
+  it('the result card title is the card-title role and its header holds the tier label and outcome badge', () => {
+    render(<App />)
+    chooseExample('Forged scope')
+    const card = resultCards()[0]
+    const head = card.querySelector('.shell-result__head')!
+    expect(head.querySelector('h3.shell-result__title')!.textContent).toBe('Result')
+    expect(head.querySelector('.lab-tier')!.textContent).toBe('Recorded replay')
+    const badge = head.querySelector<HTMLElement>('.lab-outcome')!
+    expect(badge.dataset.status).toBe('denied')
+    expect(badge.textContent).toBe('Refused')
+    expect(badge.querySelector('svg')!.getAttribute('aria-hidden')).toBe('true')
+    // No v1.0 chip-class tier labels anywhere in the shell.
+    expect(document.querySelectorAll('.shell-tier')).toHaveLength(0)
   })
 })
 
@@ -225,5 +364,11 @@ describe('third-party licences', () => {
     const notice = readFileSync(join(process.cwd(), 'NOTICE'))
     const served = readFileSync(join(process.cwd(), 'public', 'NOTICE.txt'))
     expect(served.equals(notice)).toBe(true)
+  })
+  it('serves the bundled font\'s full OFL licence, byte for byte as the package ships it', () => {
+    const shipped = readFileSync(join(process.cwd(), 'node_modules', '@fontsource-variable', 'space-grotesk', 'LICENSE'))
+    const served = readFileSync(join(process.cwd(), 'public', 'licenses', 'space-grotesk-OFL.txt'))
+    expect(served.equals(shipped)).toBe(true)
+    expect(readFileSync(join(process.cwd(), 'NOTICE'), 'utf8')).toContain('licenses/space-grotesk-OFL.txt')
   })
 })

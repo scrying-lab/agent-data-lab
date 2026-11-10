@@ -1,143 +1,320 @@
-/* Lesson panels. Colours, fonts, borders and shadows come only from src/tokens.css.
-   Editorial + modern brutalism: 2px rules, square corners, a solid offset shadow on raised panels. */
+/* Lesson sections. Colours, fonts, borders and shadows come only from src/tokens.css.
+   Border budget (spec section 5): 2px plus a shadow is a raised interactive unit (index cards);
+   2px alone bounds a card or a control; a 1px hairline separates rows; a tint with no border is a
+   group, and every tinted band has a border or a label at its edge. Never more than two bordered
+   levels deep. --font-ui is only for kickers, labels, chips, buttons and card titles. */
 
-.lsn-panel {
-  border: var(--border-width) solid var(--rule);
-  border-radius: var(--radius);
-  background: var(--paper);
-  color: var(--ink);
-  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--rule);
-  padding: clamp(16px, 3vw, 32px);
-  min-width: 0;
-}
-.lsn-panel + .lsn-panel { margin-top: 32px; }
+/* The section itself is not a box: no border, no shadow, no padding. */
+.lsn-panel { color: var(--ink); min-width: 0; }
+.lsn-panel + .lsn-panel { margin-top: 48px; }
 
-.lsn-panel h2,
-.lsn-panel h3 {
-  font-family: var(--font-display);
-  font-weight: normal;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-}
-.lsn-panel h2 { font-size: clamp(1.6rem, 5vw, 2.4rem); line-height: 1.1; margin: 0 0 12px; }
-.lsn-panel h3 { font-size: clamp(1.25rem, 3.5vw, 1.6rem); line-height: 1.2; margin: 0 0 8px; }
-.lsn-panel h4 { font: 600 0.75rem/1.4 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 6px; }
-.lsn-panel p { line-height: 1.55; margin: 0 0 12px; max-width: 70ch; }
+.lsn-panel p { line-height: 1.6; margin: 0 0 12px; max-width: 72ch; }
 .lsn-panel a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
-.lsn-panel a:focus-visible,
-.lsn-panel button:focus-visible,
-.lsn-code:focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 2px;
-}
 .lsn-panel code { font-family: var(--font-mono); font-size: 0.9em; overflow-wrap: anywhere; }
-
-.lsn-kicker {
-  display: block;
-  font: 600 0.72rem/1.4 var(--font-mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.lsn-panel h4 {
+  margin: 0 0 6px;
   color: var(--ink-muted);
-  margin-bottom: 6px;
+  font: var(--type-label);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
 }
 .lsn-muted { color: var(--ink-muted); }
 
-/* Badges carry text; none of them means an outcome. */
-.lsn-badge {
-  border: var(--border-width) solid var(--rule);
-  border-radius: var(--radius);
-  background: var(--paper);
-  color: var(--ink);
-  font: 600 0.75rem/1.3 var(--font-mono);
+/* Labels: small caps in the ui face, never a heading. */
+.lsn-kicker,
+.lsn-label {
+  display: block;
+  margin: 0 0 8px;
+  color: var(--ink-muted);
+  font: var(--type-label);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+}
+
+/* Evidence chips: no fill, a 1px muted border, a square glyph. Never coloured. */
+.lsn-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
   padding: 2px 8px;
-  white-space: normal;
-}
-
-.lsn-button {
-  min-height: 44px;
-  border: var(--border-width) solid var(--rule);
+  border: 1px solid var(--ink-muted);
   border-radius: var(--radius);
-  background: var(--brand-yellow);
-  color: var(--brand-yellow-ink);
-  font: 600 0.85rem/1.2 var(--font-mono);
-  box-shadow: 3px 3px 0 var(--rule);
-  padding: 8px 14px;
-}
-.lsn-button:hover { background: var(--brand-yellow); color: var(--brand-yellow-ink); }
-.lsn-button:active { box-shadow: none; }
-
-.lsn-trigger {
-  min-height: 44px;
-  border: var(--border-width) solid var(--rule);
-  border-radius: var(--radius);
-  background: var(--surface);
+  background: none;
   color: var(--ink);
-  font: 600 0.85rem/1.3 var(--font-mono);
-  padding: 8px 14px;
+  font: var(--type-chip);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.lsn-chip__glyph { flex: none; width: 12px; height: 12px; }
+
+/* Legend: the badge meanings, stated once per section. A tint marks the group; the label is its edge. */
+.lsn-legend {
+  margin: 20px 0 24px;
+  padding: 12px 16px;
+  border-left: var(--bar-width) solid var(--rule-divider);
+  background: var(--surface-raised);
+  max-width: 72ch;
+}
+.lsn-legend dl { display: grid; gap: 8px; margin: 0; }
+.lsn-legend-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px 12px; align-items: baseline; }
+@media (min-width: 640px) {
+  .lsn-legend-row { grid-template-columns: 11rem minmax(0, 1fr); }
+}
+.lsn-legend dt { margin: 0; }
+.lsn-legend dd { margin: 0; line-height: 1.5; }
+
+/* Buttons that open and close a disclosure: the tertiary rung, allowed to wrap. */
+.lsn-trigger {
+  height: auto;
+  padding-block: 8px;
   white-space: normal;
   text-align: left;
-  height: auto;
+  justify-content: flex-start;
 }
-.lsn-trigger:hover { background: var(--surface); color: var(--ink); }
 .lsn-trigger[data-state="open"] .lsn-chevron { transform: rotate(90deg); }
+.lsn-disclosure { margin: 16px 0; }
 
-/* Code blocks: scrollable, focusable regions so keyboard users can scroll them. */
+/* Code: a focusable scroll region on the raised surface, a 1px rule so forced colours keep the edge. */
 .lsn-code {
-  border: var(--border-width) solid var(--rule);
+  border: 1px solid var(--rule-divider);
   border-radius: var(--radius);
-  background: var(--surface);
+  background: var(--surface-raised);
   color: var(--ink);
   overflow: auto;
   max-height: 28rem;
 }
-.lsn-code pre { margin: 0; padding: 12px; font: 0.8rem/1.5 var(--font-mono); white-space: pre; }
-.lsn-code code { overflow-wrap: normal; font-size: 1em; }
+.lsn-code pre { margin: 0; padding: 12px 14px; font: var(--type-code); white-space: pre; tab-size: 2; }
+.lsn-code pre code { font-size: 1em; overflow-wrap: normal; }
+.lsn-tok-comment { color: var(--ink-muted); font-style: italic; }
+.lsn-tok-string { color: var(--text-blue); }
+.lsn-tok-keyword { color: var(--text-magenta); font-weight: 600; }
 
-/* Python left, TypeScript right; stacked under 768px. */
-.lsn-pair { border-top: var(--border-width) solid var(--rule); padding-top: 20px; margin-top: 24px; }
-.lsn-pair-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; }
-.lsn-columns { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 12px; }
-@media (min-width: 768px) {
-  .lsn-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* 04 Python -> TypeScript: the bento index. Each card is a raised button target. */
+.lsn-index {
+  list-style: none;
+  margin: 0 0 24px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
 }
+@media (min-width: 640px) {
+  .lsn-index { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lsn-index-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+@media (min-width: 1024px) {
+  .lsn-index { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .lsn-index-card { grid-column: span 2; }
+  /* Five cards: three across, then two wider ones. */
+  .lsn-index-card:nth-child(n + 4):nth-last-child(-n + 2) { grid-column: span 3; }
+}
+.lsn-index-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: var(--border-width) solid var(--rule);
+  background: var(--paper);
+  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--shadow-color);
+}
+.lsn-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--rule-divider);
+  background: var(--surface);
+}
+.lsn-card-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--target-min);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: var(--type-card);
+  letter-spacing: var(--track-card);
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+/* The whole card is the click target; the button keeps the name and the focus. */
+.lsn-card-title::after { content: ""; position: absolute; inset: 0; }
+.lsn-card-mark { width: 18px; height: 18px; flex: none; }
+.lsn-card-body { margin: 0; padding: 12px 14px 14px; font: var(--type-small); color: var(--ink); }
+.lsn-panel .lsn-card-body { margin: 0; line-height: 1.5; }
+.lsn-index-card:hover { transform: translate(1px, 1px); box-shadow: 3px 3px 0 var(--shadow-color); }
+.lsn-index-card:hover .lsn-card-title { text-decoration-thickness: 2px; }
+.lsn-index-card:active { transform: translate(var(--shadow-offset), var(--shadow-offset)); box-shadow: none; }
+@supports selector(:has(*)) {
+  .lsn-index-card:has(.lsn-card-title:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .lsn-card-title:focus-visible { outline: none; }
+}
+/* The open pair: ink fill, paper text and a check, like a selected choice. No yellow. */
+.lsn-index-card[data-open] .lsn-card-head { background: var(--ink); color: var(--paper); border-bottom-color: var(--ink); }
+.lsn-index-card[data-open] .lsn-chip { color: var(--paper); border-color: var(--paper); }
 
-.lsn-gotchas { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 12px; }
-.lsn-gotchas li { border: var(--border-width) solid var(--rule); padding: 12px; background: var(--paper); }
-.lsn-gotchas dl { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; margin: 8px 0 0; }
-.lsn-gotchas dt { font: 600 0.72rem/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; }
+/* The accordion: one 2px frame, hairlines between pairs, one pair open at a time. */
+.lsn-accordion { margin-top: 24px; border: var(--border-width) solid var(--rule); background: var(--paper); }
+.lsn-acc-item + .lsn-acc-item { border-top: 1px solid var(--rule-divider); }
+.lsn-acc-head { margin: 0; font: inherit; }
+.lsn-acc-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 16px;
+  border: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--type-card);
+  letter-spacing: var(--track-card);
+  text-align: left;
+  cursor: pointer;
+}
+.lsn-acc-trigger:hover { background: var(--surface-sunken); }
+.lsn-acc-trigger:hover > span { text-decoration: underline; text-underline-offset: 0.2em; }
+.lsn-acc-trigger:focus-visible { outline-offset: -3px; }
+.lsn-acc-trigger[data-state="open"] { background: var(--surface); border-bottom: 1px solid var(--rule-divider); }
+.lsn-acc-trigger .lsn-chevron { width: 20px; height: 20px; flex: none; }
+.lsn-acc-trigger[data-state="open"] .lsn-chevron { transform: rotate(180deg); }
+.lsn-acc-panel { padding: 16px; background: var(--surface-sunken); }
+.lsn-acc-panel[hidden] { display: none; }
+.lsn-acc-meta { margin-bottom: 12px; }
+
+/* Python left, TypeScript right from 768px; below that, two tabs. */
+.lsn-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.lsn-columns > div { min-width: 0; }
+.lsn-tabs { min-width: 0; }
+.lsn-tablist { display: flex; gap: 0; margin-bottom: 12px; border: var(--border-width) solid var(--rule); width: fit-content; max-width: 100%; }
+.lsn-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--target-min);
+  padding: 0 16px;
+  border: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--type-button);
+  cursor: pointer;
+}
+.lsn-tab + .lsn-tab { border-left: var(--border-width) solid var(--rule); }
+.lsn-tab:focus-visible { outline-offset: -5px; }
+.lsn-tab__mark { width: 16px; height: 16px; flex: none; display: none; }
+.lsn-tab[data-state="active"] { background: var(--ink); color: var(--paper); }
+.lsn-tab[data-state="active"] .lsn-tab__mark { display: inline-block; }
+.lsn-tab[data-state="active"]:focus-visible { outline-color: var(--paper); }
+.lsn-tabpanel[hidden] { display: none; }
+
+/* Gotchas: rows separated by hairlines, not boxes. */
+.lsn-gotchas { list-style: none; padding: 0; margin: 12px 0 0; border-top: 1px solid var(--rule-divider); max-width: 72rem; }
+.lsn-gotchas li { padding: 12px 0; border-bottom: 1px solid var(--rule-divider); }
+/* Whole sentences, so the body face (R-DISPLAY-SCOPE). */
+.lsn-gotcha-title { display: block; font: 600 var(--step-body) / 1.4 var(--font-body); }
+.lsn-gotchas dl { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px 16px; margin: 8px 0 0; }
+@media (min-width: 640px) {
+  .lsn-gotchas dl { grid-template-columns: 9rem minmax(0, 1fr); }
+}
+.lsn-gotchas dt { color: var(--ink-muted); font: var(--type-label); letter-spacing: var(--track-label); text-transform: uppercase; padding-top: 3px; }
 .lsn-gotchas dd { margin: 0 0 6px; }
 
-/* Elsewhere */
-.lsn-concepts { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 20px; }
-.lsn-concept { border: var(--border-width) solid var(--rule); padding: 16px; background: var(--paper); min-width: 0; }
-.lsn-vendors { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px 16px; margin: 12px 0; }
-@media (min-width: 768px) {
-  .lsn-vendors { grid-template-columns: 11rem minmax(0, 1fr); }
+/* 05 Elsewhere: two columns of concept cards. */
+.lsn-concepts {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
 }
-.lsn-vendor-row { display: contents; }
-.lsn-vendors dt { font: 600 0.75rem/1.5 var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; }
-.lsn-vendors dd { margin: 0 0 8px; }
+@media (min-width: 768px) {
+  .lsn-concepts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.lsn-concept { display: flex; flex-direction: column; min-width: 0; border: var(--border-width) solid var(--rule); background: var(--paper); }
+.lsn-concept-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--rule-divider);
+  background: var(--surface);
+}
+.lsn-panel .lsn-concept-head h3 { margin: 0; font: var(--type-card); letter-spacing: var(--track-card); }
+.lsn-concept-body { display: flex; flex-direction: column; flex: 1; padding: 14px 16px 16px; min-width: 0; }
+.lsn-vendors { display: grid; grid-template-columns: minmax(0, 1fr); margin: 4px 0 12px; }
+.lsn-vendor-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px 16px; padding: 8px 0; border-top: 1px solid var(--rule-divider); }
+@media (min-width: 1024px) {
+  .lsn-vendor-row { grid-template-columns: 9.5rem minmax(0, 1fr); }
+}
+.lsn-vendors dt { color: var(--ink-muted); font: var(--type-label); letter-spacing: var(--track-label); text-transform: uppercase; padding-top: 3px; }
+.lsn-vendors dd { margin: 0; line-height: 1.5; }
+.lsn-in-lab dt { color: var(--ink); }
 .lsn-unconfirmed { font-style: italic; color: var(--ink-muted); }
-.lsn-sources { margin: 0; padding-left: 1.25rem; font-size: 0.85rem; }
+.lsn-sources { margin: 0; padding-left: 1.25rem; font: var(--type-small); }
 .lsn-sources li { margin-bottom: 4px; }
 
-/* Run it for real */
-.lsn-run { padding: 16px; }
-.lsn-run h2 { font-size: clamp(1.3rem, 4vw, 1.7rem); }
-.lsn-commands { display: grid; gap: 8px; margin: 12px 0; }
-.lsn-disclosure { margin: 12px 0; }
+/* Native disclosures: other platforms and sources, and the method note. */
+.lsn-more { margin-top: auto; border-top: 1px solid var(--rule-divider); }
+.lsn-more > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--target-min);
+  cursor: pointer;
+  list-style: none;
+  color: var(--ink);
+  font: var(--type-button);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+}
+.lsn-more > summary::-webkit-details-marker { display: none; }
+.lsn-more > summary::before { content: "+"; content: "+" / ""; width: 1ch; font: 700 1rem / 1 var(--font-mono); text-decoration: none; }
+.lsn-more[open] > summary::before { content: "\2212"; content: "\2212" / ""; }
+.lsn-more > summary:hover { text-decoration-thickness: 2px; }
+.lsn-more__body { padding: 4px 0 4px; }
+.lsn-method { margin: 0 0 8px; max-width: 72ch; border-top: 0; }
+
+/* 06 Run it for real: the commands sit in a yellow-wash group (act here), bounded by a yellow bar. */
+.lsn-run { max-width: 56rem; }
+.lsn-run-step {
+  margin: 20px 0;
+  padding: 14px 16px 16px;
+  border-left: var(--bar-width) solid var(--brand-yellow);
+  background: var(--wash-yellow);
+}
+.lsn-run-step .lsn-label { color: var(--ink); }
+.lsn-run-live { padding-top: 12px; }
+.lsn-run-live > p:first-child { margin-top: 0; }
+.lsn-commands { display: grid; gap: 12px; }
+.lsn-run .lab-callout { margin-top: 24px; }
+.lsn-run .lab-callout__body p { margin: 0; font: var(--type-voice); }
 
 /* Lesson guide */
-.lsn-prediction {
-  border: var(--border-width) solid var(--rule);
+.lsn-prediction { margin: 16px 0; border: var(--border-width) solid var(--rule); background: var(--wash-yellow); }
+.lsn-panel .lsn-prediction h3 {
+  margin: 0;
+  padding: 6px 16px;
+  border-bottom: var(--border-width) solid var(--btn-primary-edge);
   background: var(--brand-yellow);
   color: var(--brand-yellow-ink);
-  padding: 12px 16px;
-  margin: 16px 0;
+  font: var(--type-kicker);
+  letter-spacing: var(--track-kicker);
+  text-transform: uppercase;
 }
-.lsn-prediction .lsn-kicker,
-.lsn-panel .lsn-prediction h3 { color: var(--brand-yellow-ink); margin: 0 0 4px; font: 600 0.72rem/1.4 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
-.lsn-prediction p { margin: 0; font-family: var(--font-display); font-size: 1.15rem; }
+.lsn-prediction p { margin: 0; padding: 16px; font: var(--type-voice); }
 .lsn-routes { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 @media (min-width: 768px) {
   .lsn-routes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -147,12 +324,35 @@
 .lsn-pointers { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
 
 /* Compare models */
+.lsn-compare h2 { margin: 0 0 12px; font-size: var(--step-panel); letter-spacing: var(--track-panel); line-height: var(--leading-panel); }
+.lsn-compare h3 { margin: 16px 0 12px; }
 .lsn-compare-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 @media (min-width: 768px) {
   .lsn-compare-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-.lsn-compare-col { border: var(--border-width) solid var(--rule); padding: 16px; min-width: 0; }
+.lsn-compare-col { min-width: 0; border: var(--border-width) solid var(--rule); background: var(--paper); }
+.lsn-compare-head { display: grid; gap: 8px; justify-items: start; padding: 12px 16px; border-bottom: 1px solid var(--rule-divider); background: var(--surface); }
+.lsn-panel .lsn-compare-head h4 { margin: 0; color: var(--ink); font: var(--type-code); letter-spacing: 0; text-transform: none; }
+.lsn-compare-body { padding: 14px 16px; }
+
+/* Phones: cards drop the shadow and tighten. */
+@media (max-width: 419px) {
+  .lsn-index-card { box-shadow: none; }
+  .lsn-index-card:hover, .lsn-index-card:active { transform: none; box-shadow: none; }
+  .lsn-card-head, .lsn-card-body, .lsn-concept-head, .lsn-concept-body, .lsn-acc-trigger, .lsn-acc-panel, .lsn-run-step, .lsn-compare-head, .lsn-compare-body { padding-inline: 12px; }
+}
+
+@media (forced-colors: active) {
+  .lsn-chip, .lsn-code, .lsn-index-card, .lsn-concept, .lsn-accordion, .lsn-tablist { border-color: CanvasText; }
+  .lsn-legend, .lsn-run-step { border-left-color: CanvasText; }
+  .lsn-tab[data-state="active"], .lsn-index-card[data-open] .lsn-card-head { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+  .lsn-index-card[data-open] .lsn-chip { color: HighlightText; border-color: HighlightText; }
+}
 
 @media (prefers-reduced-motion: no-preference) {
   .lsn-chevron { transition: transform 120ms ease-out; }
+  .lsn-index-card { transition: transform 120ms ease-out, box-shadow 120ms ease-out; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lsn-index-card:hover, .lsn-index-card:active { transform: none; }
 }

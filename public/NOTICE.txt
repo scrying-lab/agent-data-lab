@@ -39,24 +39,31 @@ arquero 8.0.3 ..................... BSD-3-Clause
 lucide-react 0.577.0 .............. ISC    Portions copyright Cole Bemis (Feather, MIT);
                                            all other copyright Lucide Contributors.
 CodeMirror (@codemirror/commands 6.11.1, @codemirror/lang-javascript 6.2.5,
-  @codemirror/state 6.7.6, @codemirror/view 6.43.15) ... MIT
+  @codemirror/language 6.13.1, @codemirror/state 6.7.6, @codemirror/view 6.43.15,
+  @lezer/highlight 1.2.5) ... MIT
                                            Copyright (C) 2018-2021 Marijn Haverbeke and others
 json5 2.2.3 ....................... MIT    Copyright (c) 2012-2018 Aseem Kishore, and others
 class-variance-authority 0.7.1 .... Apache-2.0
 clsx 2.1.1 ........................ MIT    Copyright (c) Luke Edwards
 tailwind-merge 3.7.0 .............. MIT    Copyright (c) 2021 Dany Castillo
 
+Font: Space Grotesk (@fontsource-variable/space-grotesk 5.3.0) ... OFL-1.1
+                                           Copyright 2020 The Space Grotesk Project Authors
+                                           Full licence, served with the site:
+                                           licenses/space-grotesk-OFL.txt
+
 The list above names the project's direct dependencies only. The built site also
 bundles packages that they depend on, for example the d3 modules used by Observable
 Plot (ISC; d3-ease is BSD-3-Clause), robust-predicates (Unlicense), tslib (0BSD), and
 whichever of the Strands SDK's own dependencies (several Apache-2.0) the browser build
 keeps. Across the whole production dependency tree the licences are MIT, ISC,
-Apache-2.0, BSD-3-Clause, 0BSD and Unlicense; package-lock.json records the licence
-of every package.
+Apache-2.0, BSD-3-Clause, 0BSD and Unlicense, plus OFL-1.1 for the font;
+package-lock.json records the licence of every package.
 
 The full licence text of each package is distributed with that package's source.
-Note: the hosted site does not yet serve this file or those licence texts alongside
-its JavaScript. Doing so is a release requirement in docs/releasing.md.
+The hosted site serves this file as NOTICE.txt and the font's full licence. It does not
+yet serve the full licence text of each bundled JavaScript package; that remains an
+open item in docs/releasing.md.
 
 ------------------------------------------------------------------------------
 WORKSHOP MATERIAL

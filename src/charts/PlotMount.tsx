@@ -5,6 +5,20 @@ import { useWidth } from './hooks'
 export const FALLBACK_WIDTH = 640
 
 /**
+ * Plot names every mark and axis group (<g aria-label="line">, "x-axis tick label" …). The mark
+ * option ariaLabel cannot turn that off: it is a per-element channel, and the group name is the mark
+ * type's default. Inside an SVG with role="img" those names are presentational and only draw axe
+ * reports, so they move to data-mark, which keeps them for debugging and tests. The SVG keeps its
+ * own aria-label and aria-description.
+ */
+export function unlabelMarks(svg: Element): void {
+  for (const element of svg.querySelectorAll('[aria-label]')) {
+    element.setAttribute('data-mark', element.getAttribute('aria-label') ?? '')
+    element.removeAttribute('aria-label')
+  }
+}
+
+/**
  * Mounts an Observable Plot element and redraws it when the container is resized or `render` changes.
  * `render` receives the available width; memoise it (useCallback) so it changes only with its inputs.
  * The SVG is exposed as one image with an aria-label and aria-description; the same numbers are
@@ -17,7 +31,10 @@ export function PlotMount({ render, className }: { render: (width: number) => El
     const container = ref.current
     if (!container) return
     const node = render(width > 0 ? width : FALLBACK_WIDTH)
-    if (node.tagName.toLowerCase() === 'svg') node.setAttribute('role', 'img')
+    if (node.tagName.toLowerCase() === 'svg') {
+      node.setAttribute('role', 'img')
+      unlabelMarks(node)
+    }
     container.replaceChildren(node)
     return () => container.replaceChildren()
   }, [render, width])

@@ -4,7 +4,7 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { render, screen, fireEvent, within, cleanup, act } from '@testing-library/react'
 import { z } from 'zod'
-import { runSchema, type LabRun } from '../agent/run-contract'
+import { runSchema, tierLabel, type LabRun } from '../agent/run-contract'
 import { periods, resultSchema, weekdays, type Result } from '../analytics/contracts'
 import { analyze } from '../analytics/compute'
 import { fromCSV } from 'arquero'
@@ -12,7 +12,9 @@ import recordings from '../fixtures/executions.json'
 
 vi.mock('../src/announce', () => ({ announce: vi.fn() }))
 import { announce } from '../src/announce'
-import { HourlyChart, WeatherChart, WeekHeatmap, DEFAULT_WEEK_DOMAIN, chartSummary, one, count, clock } from '../src/charts'
+import { HourlyChart, WeatherChart, WeekHeatmap, DEFAULT_WEEK_DOMAIN, chartSummary, hourlyStats, weekStats, one, count, clock } from '../src/charts'
+import { cividisFrom } from '../src/charts/WeekHeatmap'
+import { MARK_CONTRAST, contrast, parseColor, schemeStart } from '../src/charts/contrast'
 
 beforeAll(() => {
   class ResizeObserverMock { observe() {} unobserve() {} disconnect() {} }
@@ -84,7 +86,7 @@ describe('HourlyChart', () => {
     document.documentElement.style.setProperty('--series-1', 'rgb(1, 2, 3)')
     document.documentElement.style.setProperty('--series-2', 'rgb(7, 8, 9)')
     const { container } = render(<HourlyChart result={result} provenance={run} />)
-    const groups = [...svg(container).querySelectorAll('g[aria-label="line"]')]
+    const groups = [...svg(container).querySelectorAll('g[data-mark="line"]')]
     expect(groups.length).toBe(2)
     const style = groups.map(g => ({ stroke: g.getAttribute('stroke'), dash: g.getAttribute('stroke-dasharray') ?? g.querySelector('path')?.getAttribute('stroke-dasharray') ?? null }))
     // Working days (series 1) is the solid line, Nonworking days (series 2) the dashed one, as the key says.
@@ -100,7 +102,7 @@ describe('HourlyChart', () => {
   it('re-reads token colours when the theme changes', async () => {
     document.documentElement.style.setProperty('--series-1', 'rgb(1, 2, 3)')
     const { container } = render(<HourlyChart result={result} provenance={run} />)
-    const strokes = () => [...svg(container).querySelectorAll('g[aria-label="line"]')].map(g => g.getAttribute('stroke'))
+    const strokes = () => [...svg(container).querySelectorAll('g[data-mark="line"]')].map(g => g.getAttribute('stroke'))
     expect(strokes()).toContain('rgb(1, 2, 3)')
     await act(async () => {
       document.documentElement.style.setProperty('--series-1', 'rgb(4, 5, 6)')
@@ -203,10 +205,10 @@ describe('WeekHeatmap', () => {
   it('lays out 7 rows Sun–Sat and 24 hour columns, with a labelled colour legend', () => {
     const { container } = render(<WeekHeatmap result={result} provenance={run} />)
     const plot = svg(container)
-    const ticks = [...plot.querySelectorAll('g[aria-label="y-axis tick label"] text')].map(t => t.textContent)
+    const ticks = [...plot.querySelectorAll('g[data-mark="y-axis tick label"] text')].map(t => t.textContent)
     expect(ticks).toEqual(weekdays)
     expect(weekdays[0]).toBe('Sun')
-    expect(plot.querySelectorAll('g[aria-label="cell"] rect').length).toBe(168)
+    expect(plot.querySelectorAll('g[data-mark="cell"] rect').length).toBe(168)
     expect(screen.getByText(/Colour key/)).toBeTruthy()
     expect(container.querySelector('.lab-chart__legend-ramp svg')?.getAttribute('aria-label')).toMatch(/0\.0.*680\.9/)
     expect(screen.queryByText('Colour scale changed')).toBeNull()
@@ -227,7 +229,7 @@ describe('WeekHeatmap', () => {
     const hatched = [...plot.querySelectorAll('rect')].filter(r => (r.getAttribute('fill') ?? r.parentElement?.getAttribute('fill') ?? '').startsWith('url(#'))
     expect(hatched.length).toBe(1)
     expect(plot.querySelector('pattern')).toBeTruthy()
-    expect(plot.querySelectorAll('g[aria-label="cell"] rect').length).toBe(168)
+    expect(plot.querySelectorAll('g[data-mark="cell"] rect').length).toBe(168)
     expect(chartSummary(custom)).toContain('1 of 168 hours of the week have no observations')
     expect(chartSummary(custom)).toContain('the quietest is Monday at 04:00 with 0.0')
     expect(chartSummary(custom)).not.toMatch(/weekday/)
@@ -253,11 +255,144 @@ describe('WeekHeatmap', () => {
     Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => 340 })
     try {
       const { container } = render(<WeekHeatmap result={result} provenance={run} />)
-      const ticks = [...svg(container).querySelectorAll('g[aria-label="x-axis tick label"] text')].map(t => t.textContent)
+      const ticks = [...svg(container).querySelectorAll('g[data-mark="x-axis tick label"] text')].map(t => t.textContent)
       expect(ticks).toEqual(['0', '6', '12', '18', '23'])
     } finally {
       if (original) Object.defineProperty(HTMLElement.prototype, 'clientWidth', original)
     }
+  })
+})
+
+describe('ChartFigure frame', () => {
+  const hourly = fixture('hourly')
+
+  it('opens with a head band holding the title and the TierLabel, inside the figcaption', () => {
+    const { container } = render(<HourlyChart result={hourly.result} provenance={hourly.run} />)
+    const caption = screen.getByRole('figure').querySelector('figcaption')!
+    const head = caption.querySelector('.lab-chart__head')!
+    expect(head.querySelector('.lab-chart__title')?.textContent).toBe('Two rhythms in one day')
+    const label = head.querySelector('.lab-tier')!
+    expect(label.getAttribute('data-tier')).toBe('replay')
+    expect(label.textContent).toBe(tierLabel(hourly.run))
+    // The label's icon is decoration; the words carry the meaning.
+    expect(label.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true')
+    // One tier label per figure, and no leftover chip.
+    expect(container.querySelectorAll('.lab-tier').length).toBe(1)
+    expect(container.querySelector('[data-slot="badge"].lab-chart__tier')).toBeNull()
+  })
+
+  it('never calls a simulated run a replay: the label and the stat tone follow the run', () => {
+    const simulated = { ...hourly.run, tier: 'simulated' as const }
+    const { container } = render(<HourlyChart result={hourly.result} provenance={simulated} />)
+    const label = container.querySelector('.lab-tier')!
+    expect(label.getAttribute('data-tier')).toBe('simulated')
+    expect(label.textContent).toBe('Simulated in your browser')
+    expect(container.textContent).not.toContain('Recorded replay')
+    const tones = [...container.querySelectorAll('.lab-stat')].map(t => t.getAttribute('data-tone'))
+    expect(tones).toEqual(['magenta', 'magenta'])
+  })
+
+  it('shows two peak stats above the plot, with the same numbers as the summary sentence and the table', () => {
+    const { container } = render(<HourlyChart result={hourly.result} provenance={hourly.run} />)
+    const tiles = [...container.querySelectorAll('.lab-chart__stats .lab-stat')]
+    expect(tiles.map(t => t.getAttribute('data-tone'))).toEqual(['blue', 'blue'])
+    const stats = tiles.map(t => ({ value: t.querySelector('.lab-stat__value')!.textContent, label: t.querySelector('.lab-stat__label')!.textContent }))
+    expect(stats).toEqual(hourlyStats(hourly.result))
+    expect(stats[0]).toEqual({ value: '525.3', label: 'Working days peak · 17:00' })
+    for (const stat of stats) expect(chartSummary(hourly.result)).toContain(stat.value)
+    // Above the plot: the stats come before the plot in reading order.
+    const plot = container.querySelector('.lab-chart__plot')!
+    expect(tiles[0].compareDocumentPosition(plot) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    // Computed, not written in: the stats follow the data.
+    const shifted = resultSchema.parse({ ...hourly.result, points: hourly.result.points.map(p => (p.group === 'Working days' && p.hour === 8 ? { ...p, mean: 900 } : p)) })
+    expect(hourlyStats(shifted)[0]).toEqual({ value: '900.0', label: 'Working days peak · 08:00' })
+  })
+
+  it('"Show the numbers" hides the table while closed and shows it while open', () => {
+    const { container } = render(<HourlyChart result={hourly.result} provenance={hourly.run} />)
+    const button = screen.getByRole('button', { name: 'Show the numbers' })
+    const region = container.querySelector('.lab-chart__table-wrap')!
+    expect(button.getAttribute('aria-expanded')).toBe('false')
+    expect(region.closest('[hidden]')).toBeTruthy()
+    expect(screen.queryByRole('table')).toBeNull()
+    expect(screen.queryByRole('region', { name: 'Hourly numbers, scrollable' })).toBeNull()
+    openNumbers()
+    expect(button.getAttribute('aria-expanded')).toBe('true')
+    expect(region.closest('[hidden]')).toBeNull()
+    expect(screen.getByRole('region', { name: 'Hourly numbers, scrollable' })).toBeTruthy()
+    expect(table()).toBeTruthy()
+    fireEvent.click(button)
+    expect(button.getAttribute('aria-expanded')).toBe('false')
+    expect(screen.queryByRole('table')).toBeNull()
+  })
+
+  it('exposes each plot as one named image: Plot\'s inner mark and axis groups carry no aria-label', () => {
+    const { container } = render(<WeekHeatmap result={fixture('week').result} provenance={hourly.run} />)
+    const images = [...container.querySelectorAll('.lab-chart__plot > svg, .lab-chart__legend-ramp > svg')]
+    expect(images.length).toBe(2)
+    for (const image of images) {
+      expect(image.getAttribute('role')).toBe('img')
+      expect(image.getAttribute('aria-label')).toBeTruthy()
+      expect(image.querySelectorAll('[aria-label]').length).toBe(0)
+    }
+    // The names are kept as data-mark for debugging and tests.
+    expect(svg(container).querySelectorAll('g[data-mark]').length).toBeGreaterThan(0)
+  })
+})
+
+describe('chart stats', () => {
+  it('weather stats follow the measure on show, and the selected measure carries a check', () => {
+    const { run, result } = fixture('weather')
+    const { container } = render(<WeatherChart result={result} provenance={run} />)
+    const values = () => [...container.querySelectorAll('.lab-stat')].map(t => [t.querySelector('.lab-stat__value')!.textContent, t.querySelector('.lab-stat__label')!.textContent])
+    expect(values()).toEqual([
+      [one(result.points.find(p => p.group === 'Clear / few clouds')!.mean), 'Highest · Clear / few clouds'],
+      [one(result.points.find(p => p.group === 'Heavy rain or snow')!.mean), 'Lowest · Heavy rain or snow · small sample'],
+    ])
+    const checked = () => [...container.querySelectorAll('.lab-chart__toggle-item')].filter(b => b.querySelector('.lab-chart__check')).map(b => b.textContent)
+    expect(checked()).toEqual(['Mean per hour'])
+    fireEvent.click(screen.getByRole('radio', { name: 'Total rentals' }))
+    expect(values()[0]).toEqual(['2,338,173', 'Most in total · Clear / few clouds'])
+    expect(values()[1]).toEqual(['223', 'Fewest in total · Heavy rain or snow · small sample'])
+    expect(checked()).toEqual(['Total rentals'])
+    for (const [value] of values()) expect(chartSummary(result, 'total')).toContain(value)
+  })
+
+  it('week stats are the busiest and quietest hours the summary names', () => {
+    const { result } = fixture('week')
+    const [busiest, quietest] = weekStats(result)
+    expect(busiest).toEqual({ value: '544.3', label: 'Busiest · Tuesday 17:00' })
+    expect(quietest.label).toMatch(/^Quietest · \w+day \d\d:00$/)
+    expect(chartSummary(result)).toContain(`the quietest is ${quietest.label.replace('Quietest · ', '').replace(' ', ' at ')} with ${quietest.value}`)
+  })
+})
+
+describe('WeekHeatmap low end', () => {
+  const { run, result } = fixture('week')
+  const fills = (container: HTMLElement) => [...svg(container).querySelectorAll('g[data-mark="cell"] rect')]
+    .map(r => r.getAttribute('fill') ?? '').filter(f => f.startsWith('rgb'))
+
+  it('keeps every observed cell at 3:1 or more against the dark page, so the small hours never vanish', () => {
+    document.documentElement.style.setProperty('--paper', 'rgb(18, 18, 18)')
+    const { container } = render(<WeekHeatmap result={result} provenance={run} />)
+    const page = parseColor('rgb(18, 18, 18)')!
+    const cells = fills(container)
+    expect(cells.length).toBe(result.points.length)
+    for (const fill of cells) expect(contrast(parseColor(fill)!, page), fill).toBeGreaterThanOrEqual(MARK_CONTRAST)
+    // The plain scheme's darkest blue would not clear it on this page.
+    expect(contrast(parseColor(cividisFrom(0)(0))!, page)).toBeLessThan(MARK_CONTRAST)
+    // The legend ramp is drawn from the same lifted scale.
+    const ramp = [...container.querySelectorAll('.lab-chart__legend-ramp rect')].map(r => r.getAttribute('fill') ?? '')
+    expect(contrast(parseColor(ramp[0])!, page)).toBeGreaterThanOrEqual(MARK_CONTRAST)
+  })
+
+  it('leaves the scheme whole on the light page', () => {
+    document.documentElement.style.setProperty('--paper', 'rgb(255, 255, 255)')
+    expect(schemeStart(cividisFrom(0), 'rgb(255, 255, 255)')).toBe(0)
+    const points = weekdays.flatMap(group => Array.from({ length: 24 }, (_, hour) => ({ group, hour, mean: group === 'Mon' && hour === 4 ? 0 : 100, n: 50 })))
+    const custom = resultSchema.parse({ period: 'both', points, n: 50 * points.length, answer: 'test' })
+    const { container } = render(<WeekHeatmap result={custom} provenance={run} />)
+    expect(fills(container)).toContain(cividisFrom(0)(0))
   })
 })
 

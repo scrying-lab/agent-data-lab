@@ -1,22 +1,27 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest'
 import { act, cleanup, fireEvent, render, renderHook, screen, within } from '@testing-library/react'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { z } from 'zod'
 import recordings from '../fixtures/executions.json'
+import governanceRecordings from '../fixtures/governance-replays.json'
 import { runSchema } from '../agent/run-contract'
 import { narrate } from '../content/narration'
 import { announce } from '../src/announce'
 import { glideMs, usePrefersReducedMotion } from '../src/trace/media'
-import { PLAY_INTERVAL_MS, TracePanel } from '../src/trace/TracePanel'
+import { DEV_DISCLOSURE_TITLE, PLAY_INTERVAL_MS, TracePanel, traceTitles } from '../src/trace/TracePanel'
 
 vi.mock('../src/announce', () => ({ announce: vi.fn() }))
 
 const runs = z.array(runSchema).parse(recordings)
 const okRun = runs.find(r => r.outcome.status === 'ok')!
 const deniedRun = runs.find(r => r.outcome.status === 'denied')!
+const governanceRun = z.array(runSchema).parse(governanceRecordings)[0]
+const traceCss = readFileSync(join(process.cwd(), 'src/trace/trace.css'), 'utf8')
 
 /** What the mocked system settings report; each test can change them. */
-const system = { reducedMotion: true, dark: false }
+const system = { reducedMotion: true, dark: false, phone: false }
 
 beforeAll(() => {
   // jsdom lacks the layout APIs React Flow measures with.
@@ -33,7 +38,10 @@ beforeAll(() => {
   })
   ;(SVGElement.prototype as unknown as { getBBox: () => DOMRect }).getBBox = () => ({ x: 0, y: 0, width: 0, height: 0 }) as DOMRect
   window.matchMedia = ((query: string) => ({
-    matches: query.includes('reduce') ? system.reducedMotion : query.includes('dark') ? system.dark : false,
+    matches: query.includes('reduce') ? system.reducedMotion
+      : query.includes('dark') ? system.dark
+      : query.includes('max-width') ? system.phone
+      : false,
     media: query, onchange: null,
     addEventListener: () => {}, removeEventListener: () => {}, addListener: () => {}, removeListener: () => {}, dispatchEvent: () => false,
   })) as unknown as typeof window.matchMedia
@@ -42,13 +50,18 @@ beforeEach(() => vi.mocked(announce).mockClear())
 afterEach(() => {
   cleanup()
   vi.useRealTimers()
-  Object.assign(system, { reducedMotion: true, dark: false })
+  Object.assign(system, { reducedMotion: true, dark: false, phone: false })
   delete document.documentElement.dataset.theme
 })
 
 const list = () => screen.getByRole('list', { name: 'Steps' })
 const stepButtons = () => within(list()).getAllByRole('button')
 const current = () => stepButtons().find(b => b.getAttribute('aria-current') === 'step')
+const devDisclosure = () => document.querySelector<HTMLDetailsElement>('details.trace-dev')!
+/** The graph starts closed: open it from its toggle inside the developer disclosure. */
+const openGraph = () => fireEvent.click(screen.getByRole('button', { name: 'Graph of the same steps' }))
+/** a comes before b in document order. */
+const precedes = (a: Node, b: Node) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
 
 describe('TracePanel', () => {
   it('renders the step list as an ordered list of buttons labelled "Step N of M"', () => {
@@ -109,6 +122,7 @@ describe('TracePanel', () => {
 
   it('renders a visual-only graph: no live regions, no delete hints, no controls inside nodes', () => {
     render(<TracePanel run={okRun} />)
+    openGraph()
     const graph = document.querySelector('.react-flow')!
     expect(graph).toBeTruthy()
     expect(graph.getAttribute('aria-label')).toBe('Execution graph — the same steps as the step list')
@@ -125,17 +139,20 @@ describe('TracePanel', () => {
   it('the graph follows the page theme: data-theme first, then the system setting', () => {
     document.documentElement.dataset.theme = 'dark'
     const { unmount } = render(<TracePanel run={okRun} />)
+    openGraph()
     expect(document.querySelector('.react-flow')!.classList.contains('dark')).toBe(true)
     act(() => { document.documentElement.dataset.theme = 'light' })
     unmount()
 
     render(<TracePanel run={okRun} />)
+    openGraph()
     expect(document.querySelector('.react-flow')!.classList.contains('light')).toBe(true)
     cleanup()
 
     delete document.documentElement.dataset.theme
     system.dark = true
     render(<TracePanel run={okRun} />)
+    openGraph()
     expect(document.querySelector('.react-flow')!.classList.contains('dark')).toBe(true)
   })
 
@@ -150,6 +167,7 @@ describe('TracePanel', () => {
 
   it('clicking a graph node selects that step; the selected node gets the chosen class', () => {
     render(<TracePanel run={okRun} />)
+    openGraph()
     const node = document.querySelector('.react-flow__node[data-id="5"]')!
     fireEvent.click(node)
     expect(current()).toBe(stepButtons()[5])
@@ -157,10 +175,14 @@ describe('TracePanel', () => {
     expect(document.querySelectorAll('.react-flow__node.chosen')).toHaveLength(1)
   })
 
-  it('the graph can be hidden', () => {
+  it('the graph starts closed, opens from its toggle and can be hidden again', () => {
     render(<TracePanel run={okRun} />)
     const toggle = screen.getByRole('button', { name: 'Graph of the same steps' })
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    expect(document.querySelector('.react-flow')).toBeNull()
+    fireEvent.click(toggle)
     expect(toggle.getAttribute('aria-expanded')).toBe('true')
+    expect(document.querySelector('.react-flow')).toBeTruthy()
     fireEvent.click(toggle)
     expect(toggle.getAttribute('aria-expanded')).toBe('false')
     expect(document.querySelector('.react-flow')).toBeNull()
@@ -219,7 +241,7 @@ describe('TracePanel', () => {
     const play = screen.getByRole('button', { name: 'Play' })
     fireEvent.click(play)
     expect(play.getAttribute('aria-pressed')).toBe('true')
-    fireEvent.pointerDown(screen.getByRole('heading', { name: 'What happened, step by step' }))
+    fireEvent.pointerDown(screen.getByRole('heading', { level: 2, name: traceTitles[okRun.lesson] }))
     expect(play.getAttribute('aria-pressed')).toBe('false')
   })
 
@@ -247,6 +269,116 @@ describe('TracePanel', () => {
     const { container } = render(<TracePanel run={okRun} />)
     expect(container.querySelectorAll('[aria-live], [role="status"], [role="alert"], [role="log"]')).toHaveLength(0)
     expect(screen.getAllByText('Recorded replay').length).toBe(1)
+    // The shared TierLabel, in the head band, replaces the old chip.
+    const label = screen.getByText('Recorded replay').closest('.lab-tier')!
+    expect(label.getAttribute('data-tier')).toBe('replay')
+    expect(label.closest('.trace__head')).toBeTruthy()
+    expect(container.querySelector('.trace-tier, [data-slot="badge"]')).toBeNull()
+  })
+
+  it('leaves the label to the result card above it when showTier is false, keeping the tier tint', () => {
+    const { container } = render(<TracePanel run={okRun} showTier={false} />)
+    expect(container.querySelector('.lab-tier')).toBeNull()
+    expect(container.querySelector('.trace')!.getAttribute('data-tier')).toBe('replay')
+  })
+
+  it('a simulated run is labelled "Simulated in your browser" and never called live', () => {
+    const { container } = render(<TracePanel run={{ ...okRun, tier: 'simulated' }} />)
+    const label = screen.getByText('Simulated in your browser').closest('.lab-tier')!
+    expect(label.getAttribute('data-tier')).toBe('simulated')
+    expect(container.querySelector('.trace')!.getAttribute('data-tier')).toBe('simulated')
+    expect(container.textContent).not.toMatch(/\blive\b/i)
+  })
+
+  it('reads in order: the Guide, the step details, then the developer disclosure with the list and graph', () => {
+    const { container } = render(<TracePanel run={okRun} />)
+    const guide = screen.getByRole('region', { name: 'Guide' })
+    const details = screen.getByRole('heading', { level: 3, name: /^Step 1 of 9: / }).closest('section')!
+    const disclosure = devDisclosure()
+    expect(precedes(guide, details)).toBe(true)
+    expect(precedes(details, disclosure)).toBe(true)
+    expect(guide.contains(details) || details.contains(guide)).toBe(false)
+
+    const summary = disclosure.querySelector(':scope > summary')!
+    expect(summary.textContent).toBe(DEV_DISCLOSURE_TITLE)
+    expect(DEV_DISCLOSURE_TITLE).toBe('Every step with timings (for developers)')
+    expect(summary.querySelector('h1, h2, h3, h4, h5, h6')).toBeNull()
+    expect(disclosure.contains(list())).toBe(true)
+    expect(disclosure.contains(screen.getByRole('button', { name: 'Graph of the same steps' }))).toBe(true)
+    expect(guide.contains(list()) || details.contains(list())).toBe(false)
+
+    // Heading levels are unchanged: one h2 for the trace, then h3s for the Guide, the step and the list.
+    const outline = [...container.querySelectorAll('h1, h2, h3, h4, h5, h6')].map(h => h.tagName)
+    expect(outline).toEqual(['H2', 'H3', 'H3', 'H3'])
+    expect(screen.getByRole('heading', { level: 3, name: 'Steps' })).toBeTruthy()
+  })
+
+  it('the developer disclosure is open on wider screens and closed on phones, where the Guide still walks the steps', () => {
+    const { unmount } = render(<TracePanel run={okRun} />)
+    expect(devDisclosure().open).toBe(true)
+    unmount()
+
+    system.phone = true
+    const { container } = render(<TracePanel run={okRun} />)
+    expect(devDisclosure().open).toBe(false)
+    expect(container.querySelectorAll('.trace-steps')).toHaveLength(1)
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    expect(screen.getByRole('heading', { level: 3, name: /^Step 2 of 9: / })).toBeTruthy()
+    expect(announce).toHaveBeenCalledTimes(1)
+  })
+
+  it('each lesson’s trace has its own title, at heading level 2', () => {
+    expect(new Set(Object.values(traceTitles)).size).toBe(Object.keys(traceTitles).length)
+    expect(governanceRun.lesson).toBe('governance')
+    expect(okRun.lesson).toBe('analytics')
+    const { unmount } = render(<TracePanel run={governanceRun} />)
+    expect(screen.getByRole('heading', { level: 2, name: traceTitles.governance })).toBeTruthy()
+    unmount()
+    render(<TracePanel run={okRun} />)
+    expect(screen.getByRole('heading', { level: 2, name: traceTitles.analytics })).toBeTruthy()
+  })
+
+  it('guide buttons follow the ladder: Next is the one primary, Back tertiary, Play a toggle; ends stay focusable', () => {
+    render(<TracePanel run={okRun} />)
+    const guide = screen.getByRole('region', { name: 'Guide' })
+    const back = within(guide).getByRole('button', { name: 'Back' })
+    const next = within(guide).getByRole('button', { name: 'Next' })
+    const play = within(guide).getByRole('button', { name: 'Play' })
+    expect(next.getAttribute('data-variant')).toBe('primary')
+    expect(back.getAttribute('data-variant')).toBe('tertiary')
+    expect(play.getAttribute('data-variant')).toBe('toggle')
+    expect(guide.querySelectorAll('[data-variant="primary"]')).toHaveLength(1)
+    fireEvent.keyDown(stepButtons()[0], { key: 'End' })
+    expect(next.getAttribute('aria-disabled')).toBe('true')
+    expect(next.hasAttribute('disabled')).toBe(false)
+  })
+
+  it('a gate decision in the details carries the shared outcome badge; a refusal is neutral', () => {
+    render(<TracePanel run={deniedRun} />)
+    fireEvent.click(stepButtons()[3])
+    const badge = document.querySelector('.trace-details .trace-decision .lab-outcome')!
+    expect(badge.getAttribute('data-status')).toBe('denied')
+    expect(badge.textContent).toBe('Refused')
+  })
+
+  it('styles: the current step is a 6px ink border-left, nodes sit on the raised surface, the Guide is a yellow wash', () => {
+    const rule = (selector: string) => {
+      const at = traceCss.indexOf('\n' + selector + ' {') // a top-level rule, at the start of a line
+      expect(at, selector).toBeGreaterThanOrEqual(0)
+      return traceCss.slice(at, traceCss.indexOf('}', at))
+    }
+    expect(rule('.trace-step')).toContain('border-left: var(--bar-width) solid transparent')
+    expect(rule('.trace-step[aria-current="step"]')).toContain('border-left-color: var(--ink)')
+    expect(rule('.trace-step[aria-current="step"]')).toContain('background: var(--surface-raised)')
+    expect(traceCss).not.toMatch(/inset/)
+    expect(traceCss).toContain('--xy-node-background-color: var(--surface-raised)')
+    expect(rule('.trace-graph .react-flow__node.trace-node')).toContain('background: var(--surface-raised)')
+    expect(rule('.trace-guide')).toContain('border-left: var(--bar-width) solid var(--brand-yellow)')
+    expect(rule('.trace-guide')).toContain('background: var(--wash-yellow)')
+    // Offset shadows use --shadow-color; disabled buttons keep the ladder's dashed border, never a strikethrough.
+    expect(traceCss).not.toMatch(/box-shadow:[^;]*var\(--rule\)/)
+    expect(traceCss).not.toMatch(/line-through/)
+    expect(traceCss).not.toMatch(/aria-disabled/)
   })
 
   it('a new run starts again at step 1', () => {

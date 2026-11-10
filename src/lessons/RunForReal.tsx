@@ -4,6 +4,7 @@ import { links } from '../../content/links'
 import { announce } from '../announce'
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { Callout, SectionOpener } from '../shell/primitives'
 import { CodeBlock } from './CodeBlock'
 import '../tokens.css'
 import './lessons.css'
@@ -49,7 +50,7 @@ function Commands({ lines, label }: { lines: readonly string[]; label: string })
     <div className="lsn-commands">
       <CodeBlock label={label} code={lines.join('\n')} />
       <div>
-        <Button type="button" className="lsn-button" onClick={() => void copy(lines)}>
+        <Button type="button" variant="primary" onClick={() => void copy(lines)}>
           <Copy aria-hidden="true" />
           {'Copy '}
           <span className="sr-only">{label.toLowerCase()}</span>
@@ -59,25 +60,31 @@ function Commands({ lines, label }: { lines: readonly string[]; label: string })
   )
 }
 
-/** A compact panel shown beside a Run button: the exact commands to run the lab yourself. */
-export function RunForReal() {
+/**
+ * How to run the lab yourself: the commands to clone and start it, then (behind a disclosure) the
+ * commands to record a run with a real model in your own AWS account, then why no keys are needed here.
+ */
+export function RunForReal({ numeral = '06' }: { numeral?: string }) {
   const titleId = useId()
   return (
     <aside className="lsn-panel lsn-run" aria-labelledby={titleId}>
-      <h2 id={titleId}>Run it for real</h2>
+      <SectionOpener numeral={numeral} kicker="For developers" title={<h2 id={titleId}>Run it for real</h2>} />
       <p>
         This page plays recordings and runs the agent with a simulated model; it never calls a real one. To run the agent yourself, you need git and Node.js 24. These commands download
         the lab, run its tests and start it on your computer.
       </p>
-      <Commands lines={runCommands} label="Commands to run the lab" />
+      <div className="lsn-run-step">
+        <div className="lsn-label">On your computer</div>
+        <Commands lines={runCommands} label="Commands to run the lab" />
+      </div>
       <Collapsible className="lsn-disclosure">
         <CollapsibleTrigger asChild>
-          <Button variant="outline" className="lsn-trigger">
+          <Button variant="tertiary" className="lsn-trigger">
             <ChevronRight className="lsn-chevron" aria-hidden="true" />
             With a real model (your own AWS account)
           </Button>
         </CollapsibleTrigger>
-        <CollapsibleContent>
+        <CollapsibleContent className="lsn-run-live">
           <p>
             This calls Amazon Bedrock in your own AWS account and may cost money. Sign in with a short-lived session
             first; the recorder refuses long-lived access keys and Bedrock API keys. It saves the run to a git-ignored
@@ -86,7 +93,9 @@ export function RunForReal() {
           <Commands lines={liveCommands} label="Commands for a real model" />
         </CollapsibleContent>
       </Collapsible>
-      <p><strong>{noKeysSentence}</strong></p>
+      <Callout kind="why" kicker="Why it matters">
+        <p>{noKeysSentence}</p>
+      </Callout>
     </aside>
   )
 }

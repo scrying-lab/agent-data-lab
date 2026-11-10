@@ -1,0 +1,56 @@
+/* TierLabel. Every colour is a token; the gradient is static and two-stop sRGB (tests/tokens.test.ts samples 21 stops). */
+.lab-tier {
+  --lt-cell: var(--tier-replay-cell);
+  --lt-icon: var(--tier-replay-icon);
+  --lt-from: var(--tier-replay-from);
+  --lt-to: var(--tier-replay-to);
+  --lt-text: var(--tier-replay-text);
+  display: inline-flex;
+  align-items: stretch;
+  max-width: 100%;
+  border: var(--border-width) solid var(--rule);
+  border-radius: var(--radius);
+  font: 600 var(--step-kicker) / 1.25 var(--font-ui);
+  letter-spacing: 0.01em;
+  vertical-align: middle;
+}
+.lab-tier[data-tier="simulated"] {
+  --lt-cell: var(--tier-simulated-cell);
+  --lt-icon: var(--tier-simulated-icon);
+  --lt-from: var(--tier-simulated-from);
+  --lt-to: var(--tier-simulated-to);
+  --lt-text: var(--tier-simulated-text);
+}
+.lab-tier[data-tier="live"] {
+  --lt-cell: var(--tier-live-cell);
+  --lt-icon: var(--tier-live-icon);
+  --lt-from: var(--tier-live-from);
+  --lt-to: var(--tier-live-to);
+  --lt-text: var(--tier-live-text);
+}
+.lab-tier__cell {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-tier-cell);
+  min-height: var(--size-tier-cell);
+  background: var(--lt-cell);
+  color: var(--lt-icon);
+  border-right: var(--border-width) solid var(--rule);
+}
+.lab-tier__cell svg { width: 16px; height: 16px; }
+.lab-tier__text {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  padding: 4px 10px;
+  background-color: var(--lt-from);
+  background-image: linear-gradient(90deg, var(--lt-from), var(--lt-to));
+  color: var(--lt-text);
+  overflow-wrap: anywhere;
+}
+
+@media (forced-colors: active) {
+  .lab-tier, .lab-tier__cell, .lab-tier__text { forced-color-adjust: none; background: Canvas; color: CanvasText; border-color: CanvasText; }
+}

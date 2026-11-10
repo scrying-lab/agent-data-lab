@@ -1,9 +1,26 @@
 /*
-  Page layout: editorial + modern brutalism. One reading column (prose at most 72ch, figures wider),
-  2px rules, square corners, solid offset shadows on raised panels, serif display headings, monospace
-  labels. Colours only from src/tokens.css. Brand yellow is a fill with black text and never means an
-  outcome; outcomes always pair an icon with words, and a refusal is neutral.
+  Page layout: editorial + modern brutalism, v1.1. One reading column (prose at most 72ch, figures
+  wider), square corners, serif headings, --font-ui for display roles only. Colours only from
+  src/tokens.css.
+
+  Border budget (spec section 5):
+  - 2px plus an offset shadow: a raised interactive unit (the path cards).
+  - 2px alone: an input, a card's outer edge, or a label.
+  - 1px var(--rule-divider): separates rows.
+  - A tint with no border: a group. Every tinted band has a bar, a border or a heading at its edge,
+    so it stays bounded in forced colours.
+  Nothing is more than two bordered levels deep.
 */
+
+/* Cards inside a zone sit one step lighter than the zone in dark, never darker. The zone remaps the
+   page surfaces, so everything inside (playground blocks, result card, trace, editors, zebra rows)
+   follows without knowing it is in a zone. In light these equal the page values. */
+.shell-zone {
+  --paper: var(--surface-card);
+  --surface: var(--surface-card-raised);
+  --surface-raised: var(--surface-card-raised);
+  --rule-divider: var(--rule-divider-card);
+}
 
 /* ---- Frame ---- */
 .shell-skip {
@@ -11,16 +28,19 @@
   left: 16px;
   top: 8px;
   z-index: 50;
-  padding: 10px 14px;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  padding: 0 16px;
   background: var(--brand-yellow);
   color: var(--brand-yellow-ink);
-  border: var(--border-width) solid var(--brand-yellow-ink);
-  font: 600 0.9rem/1.2 var(--font-mono);
+  border: var(--border-width) solid var(--btn-primary-edge);
+  font: var(--type-button);
   text-decoration: none;
   transform: translateY(-200%);
 }
 .shell-skip:focus,
-.shell-skip:focus-visible { transform: none; outline-color: var(--brand-yellow-ink); }
+.shell-skip:focus-visible { transform: none; outline-color: var(--focus-on-fill); }
 
 .shell-header { border-bottom: var(--border-width) solid var(--rule); background: var(--paper); }
 .shell-header__inner,
@@ -41,10 +61,10 @@
 .shell-wordmark { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 0; }
 .shell-wordmark__name { font: 400 clamp(1.4rem, 4vw, 1.75rem)/1.1 var(--font-display); letter-spacing: -0.02em; }
 .shell-wordmark__org {
-  font: 600 0.72rem/1.4 var(--font-mono);
-  letter-spacing: 0.06em;
-  border: var(--border-width) solid var(--rule);
   padding: 1px 6px;
+  border: 1px solid var(--rule);
+  font: var(--type-label);
+  letter-spacing: var(--track-label);
 }
 
 .shell-main { padding-bottom: 48px; }
@@ -56,143 +76,253 @@
   padding-block: 24px 40px;
 }
 .shell-footer p { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin: 0; }
-.shell-footer__note { font: 0.8rem/1.5 var(--font-mono); color: var(--ink-muted); }
+.shell-footer__note { font: var(--type-small); color: var(--ink-muted); }
 
 /* ---- Shared type ---- */
 .shell-prose { max-width: 72ch; }
 .shell-prose p, p.shell-prose { margin: 0 0 12px; }
 .shell-muted { color: var(--ink-muted); }
 .shell-kicker {
-  font: 600 0.75rem/1.4 var(--font-mono);
-  letter-spacing: 0.08em;
+  margin: 0 0 12px;
+  color: var(--ink);
+  font: var(--type-kicker);
+  letter-spacing: var(--track-kicker);
   text-transform: uppercase;
-  color: var(--ink-muted);
-  margin: 0 0 8px;
 }
-.shell-section { margin-top: clamp(56px, 9vw, 112px); min-width: 0; }
-.shell-section__title { font-size: clamp(2rem, 6vw, 3.25rem); margin: 0 0 16px; }
-.shell-subtitle { font-size: clamp(1.3rem, 3.5vw, 1.7rem); margin: 0 0 10px; }
+.shell-section { margin-top: clamp(64px, 10vw, 128px); min-width: 0; scroll-margin-top: 16px; }
+.shell-subtitle { margin: 0 0 10px; font-size: var(--step-sub); letter-spacing: var(--track-sub); line-height: var(--leading-sub); }
 .shell-main code { font-size: 0.9em; overflow-wrap: anywhere; }
 
 /* ---- Hero ---- */
-.shell-hero { padding-top: clamp(40px, 8vw, 96px); }
-.shell-hero__title { font-size: clamp(2.4rem, 9vw, 5.5rem); line-height: 1; letter-spacing: -0.035em; margin: 0 0 24px; max-width: 16ch; }
-.shell-hero__lede { font-size: clamp(1.05rem, 2.4vw, 1.25rem); }
+.shell-hero { padding-top: clamp(40px, 8vw, 96px); min-width: 0; }
+.shell-hero__title { max-width: 16ch; margin: 0 0 24px; }
+.shell-hero__lede {
+  max-width: 60ch;
+  margin: 0;
+  font: 400 clamp(1.125rem, 1rem + 0.6vw, 1.375rem) / 1.5 var(--font-body);
+}
+
+/* The path cards share their two rows (who, what) on a subgrid, so the big lines align. */
 .shell-paths {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
-  gap: 20px;
-  margin-top: 32px;
+  grid-auto-rows: auto;
+  gap: 0 20px;
+  margin-top: 40px;
 }
 .shell-path {
   display: grid;
-  gap: 10px;
+  grid-row: span 2;
+  grid-template-rows: subgrid;
+  row-gap: 10px;
+  min-height: var(--target-min);
+  margin-bottom: 20px;
   padding: 18px;
   border: var(--border-width) solid var(--rule);
   background: var(--paper);
   color: var(--ink);
-  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--rule);
+  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--shadow-color);
   text-decoration: none;
-  min-height: 44px;
 }
-.shell-path:hover { background: var(--surface); }
+.shell-path:hover { background: var(--wash-blue); }
 .shell-path:active { box-shadow: none; transform: translate(var(--shadow-offset), var(--shadow-offset)); }
-.shell-path__who { display: flex; align-items: center; gap: 8px; font: 600 0.75rem/1.4 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; }
+.shell-path__who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: var(--type-kicker);
+  letter-spacing: var(--track-kicker);
+  text-transform: uppercase;
+}
 .shell-path__who svg { width: 18px; height: 18px; flex: none; }
 .shell-path__what {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  font: 400 clamp(1.3rem, 3vw, 1.6rem)/1.15 var(--font-display);
-  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  font: 400 var(--step-sub) / var(--leading-sub) var(--font-display);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
 }
 .shell-path__arrow { flex: none; width: 22px; height: 22px; }
 
-/* ---- Tier labels ---- */
-.shell-tier {
-  display: inline-block;
-  max-width: 100%;
-  border: var(--border-width) solid var(--rule);
-  background: var(--surface);
-  color: var(--ink);
-  font: 600 0.75rem/1.35 var(--font-mono);
-  padding: 2px 8px;
-  overflow-wrap: anywhere;
+/* The page index: 01-06 as numbered chips. On narrow screens the row scrolls sideways on its own,
+   never the page; padding keeps the focus ring inside the scroll box. */
+.shell-index { margin-top: 20px; min-width: 0; }
+.shell-index__list {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px 20px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
 }
+.shell-index__list > li { flex: none; scroll-snap-align: start; }
+@media (min-width: 768px) {
+  .shell-index__list { flex-wrap: wrap; overflow-x: visible; }
+}
+.shell-index__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--target-min);
+  padding-right: 4px;
+  color: var(--ink);
+  font: var(--type-button);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.shell-index__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: var(--border-width) solid var(--rule);
+  background: var(--mark-bg);
+  color: var(--mark-text);
+  font: 700 var(--step-kicker) / 1 var(--font-ui);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.shell-index__name { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.25em; }
+.shell-index__chip:hover .shell-index__name { text-decoration-thickness: 3px; }
+
+/* ---- 01 Labels: three columns on matching tints, no inner borders ---- */
 .shell-labels__list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
-  gap: 0;
-  margin: 24px 0 16px;
-  border: var(--border-width) solid var(--rule);
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  margin: 24px 0 0;
 }
-.shell-labels__item { padding: 16px; border: 1px solid var(--rule); min-width: 0; }
-.shell-labels__item dt { margin-bottom: 8px; }
+@media (min-width: 768px) {
+  .shell-labels__list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.shell-labels__item {
+  --label-wash: var(--wash-blue);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 20px;
+  background: var(--label-wash);
+}
+.shell-labels__item[data-tier="simulated"] { --label-wash: var(--wash-magenta); }
+.shell-labels__item[data-tier="live"] { --label-wash: var(--wash-yellow); }
+.shell-labels__item dt { margin: 0; }
 .shell-labels__item dd { margin: 0; }
+.shell-labels__note {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule-divider);
+  color: var(--ink-muted);
+  font: var(--type-small);
+}
 
 /* ---- Lessons ---- */
-.shell-lesson { border-top: var(--border-width) solid var(--rule); padding-top: 24px; }
-.shell-predict {
-  max-width: 72ch;
-  margin: 20px 0;
-  padding: 16px 18px;
-  background: var(--brand-yellow);
-  color: var(--brand-yellow-ink);
-  border: var(--border-width) solid var(--brand-yellow-ink);
-  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--rule);
+/* The summary as labelled fact tiles: a tint and a rule at the top edge, no box. */
+.shell-facts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  margin: 0 0 32px;
 }
-.shell-predict__label { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font: 600 0.75rem/1.4 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; }
-.shell-predict__label svg { width: 16px; height: 16px; flex: none; }
-.shell-predict__question { margin: 0; font: 400 clamp(1.15rem, 2.8vw, 1.4rem)/1.35 var(--font-display); }
+@media (min-width: 640px) {
+  .shell-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .shell-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.shell-fact {
+  min-width: 0;
+  padding: 14px 16px 16px;
+  border-top: var(--border-width) solid var(--rule);
+  background: var(--surface);
+}
+.shell-fact dt {
+  margin: 0 0 6px;
+  color: var(--ink-muted);
+  font: var(--type-label);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+}
+.shell-fact dd { margin: 0; }
 
-.shell-routes { max-width: 72ch; margin-bottom: 24px; }
+.shell-predict { max-width: 72ch; }
+
+.shell-routes { max-width: 72ch; margin-bottom: 8px; }
+.shell-routes__toggle.lab-btn { justify-content: flex-start; height: auto; padding-block: 8px; white-space: normal; text-align: left; }
 .shell-routes__body { padding-top: 16px; }
 .shell-routes__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 16px 32px; }
 .shell-routes ol, .shell-pointers { margin: 0 0 16px; padding-left: 1.4em; }
 .shell-routes ol { list-style: decimal; }
 .shell-pointers { list-style: square; }
 .shell-routes li, .shell-pointers li { margin-bottom: 6px; }
-
-.shell-button {
-  min-height: 44px;
-  height: auto;
-  border: var(--border-width) solid var(--rule);
-  border-radius: var(--radius);
-  font: 600 0.85rem/1.3 var(--font-mono);
-  padding: 8px 14px;
-  white-space: normal;
-  text-align: left;
-}
-.shell-button--quiet { background: var(--paper); color: var(--ink); box-shadow: none; }
-.shell-button--quiet:hover { background: var(--surface); color: var(--ink); }
 .shell-chevron { transition: transform 150ms ease; }
-.shell-button[data-state="open"] .shell-chevron { transform: rotate(90deg); }
+[data-state="open"] > .shell-chevron { transform: rotate(90deg); }
 
-.shell-playground { margin: 32px 0; min-width: 0; }
+/* ---- Zones: "Try it yourself" (magenta, simulated) and "Watch saved runs" (blue, replays) ---- */
+.shell-zone {
+  --zone-wash: var(--wash-blue);
+  --zone-text: var(--text-blue);
+  --zone-edge: var(--edge-blue);
+  min-width: 0;
+  margin-top: 40px;
+  padding: clamp(16px, 3vw, 32px);
+  border-top: var(--bar-width) solid var(--zone-edge);
+  background: var(--zone-wash);
+}
+.shell-zone[data-tier="simulated"] { --zone-wash: var(--wash-magenta); --zone-text: var(--text-magenta); --zone-edge: var(--edge-magenta); }
+.shell-zone[data-tier="live"] { --zone-wash: var(--wash-yellow); --zone-text: var(--ink); --zone-edge: var(--brand-yellow); }
+.shell-zone__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 0 0 24px;
+}
+.shell-zone__kicker {
+  margin: 0;
+  color: var(--zone-text);
+  font: 700 var(--step-kicker) / 1.3 var(--font-ui);
+  letter-spacing: var(--track-kicker);
+  text-transform: uppercase;
+}
+.shell-playground { min-width: 0; }
 
-.shell-examples { margin-top: 32px; }
-.shell-field { display: grid; gap: 6px; max-width: 34rem; margin-top: 12px; }
-.shell-field-label { display: block; font: 600 0.75rem/1.4 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; }
+.shell-field { display: grid; gap: 6px; max-width: 34rem; margin-top: 16px; }
+.shell-field-label {
+  display: block;
+  color: var(--ink);
+  font: var(--type-label);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+}
 .shell-select {
   width: 100%;
-  min-height: 44px;
+  min-height: var(--target-min);
   padding: 8px 12px;
   border: var(--border-width) solid var(--rule);
   border-radius: var(--radius);
   background: var(--paper);
   color: var(--ink);
   font: 1rem/1.4 var(--font-body);
-  box-shadow: 3px 3px 0 var(--rule);
   appearance: auto;
 }
 
-/* ---- Choice groups (shadcn ToggleGroup) ---- */
-.shell-controls { display: grid; gap: 20px; margin: 24px 0 8px; }
+/* ---- Choice groups (shadcn ToggleGroup). Selected: ink fill, paper text and a check, no yellow. ---- */
+.shell-controls { display: grid; gap: 20px; margin: 32px 0 8px; }
 .shell-choice-field { display: grid; gap: 6px; min-width: 0; }
 .shell-choices { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
 .shell-choice {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 44px;
+  min-height: var(--target-min);
   height: auto;
   max-width: 100%;
   padding: 8px 14px;
@@ -200,93 +330,172 @@
   border-radius: var(--radius);
   background: var(--paper);
   color: var(--ink);
-  font: 500 0.9rem/1.3 var(--font-body);
+  font: 500 var(--step-button) / 1.3 var(--font-ui);
   text-align: left;
   white-space: normal;
   flex-shrink: 1;
 }
-.shell-choice:hover { background: var(--surface); color: var(--ink); }
-.shell-choice[data-state="on"] {
-  background: var(--brand-yellow);
-  color: var(--brand-yellow-ink);
-  box-shadow: 3px 3px 0 var(--rule);
+.shell-choice:hover { background: var(--wash-blue); color: var(--ink); }
+.shell-choice[data-state="on"],
+.shell-choice[data-state="on"]:hover {
+  background: var(--ink);
+  color: var(--paper);
   font-weight: 700;
 }
 .shell-choice__mark { width: 16px; height: 16px; flex: none; }
 .shell-theme .shell-choices { width: auto; gap: 0; }
-.shell-theme .shell-choice { font: 600 0.8rem/1.2 var(--font-mono); padding: 6px 10px; }
+.shell-theme .shell-choice { padding: 6px 10px; font: 600 var(--step-kicker) / 1.2 var(--font-ui); }
 .shell-theme .shell-choice + .shell-choice { border-left-width: 0; }
-.shell-theme .shell-choice[data-state="on"] { box-shadow: none; }
 .shell-theme { grid-template-columns: auto auto; align-items: center; gap: 10px; }
 
-/* ---- A run: result card, figure, trace ---- */
-.shell-run { display: grid; gap: 32px; margin-top: 28px; min-width: 0; }
+/* ---- A run: result card, figure, trace. From 1024px a 12-column bento; the card takes 7. ---- */
+.shell-run { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; margin-top: 28px; min-width: 0; }
+@media (min-width: 1024px) {
+  .shell-run { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 32px 16px; }
+  .shell-run > * { grid-column: 1 / -1; }
+}
 .shell-figure { min-width: 0; }
 
 .shell-result {
-  max-width: 52rem;
+  --result-wash: var(--wash-blue);
   min-width: 0;
-  padding: clamp(16px, 3vw, 28px);
   border: var(--border-width) solid var(--rule);
   background: var(--paper);
-  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--rule);
 }
-.shell-result__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; margin-bottom: 12px; }
-.shell-result__title { font-size: clamp(1.5rem, 4vw, 2rem); margin: 0; }
-.shell-outcome { display: flex; align-items: center; gap: 8px; margin: 0 0 16px; font: 700 0.85rem/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em; }
-.shell-outcome svg { width: 18px; height: 18px; flex: none; }
+.shell-result[data-tier="simulated"] { --result-wash: var(--wash-magenta); }
+.shell-result[data-tier="live"] { --result-wash: var(--wash-yellow); }
+.shell-result__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 12px clamp(16px, 3vw, 24px);
+  border-bottom: 1px solid var(--rule-divider);
+  background: var(--result-wash);
+}
+.shell-result__title {
+  margin: 0;
+  font: var(--type-card);
+  letter-spacing: var(--track-card);
+}
+.shell-result__badges { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.shell-result__body { padding: clamp(16px, 3vw, 24px); }
+/* The card spans the zone like the trace under it; its contents keep a reading measure. */
+.shell-result__body > * { max-width: 72ch; }
+
+/* A sentence under the outcome badge, so the body face (R-DISPLAY-SCOPE). */
+.shell-outcome { margin: 0 0 12px; font: 600 var(--step-body) / 1.4 var(--font-body); }
 .shell-outcome--ok { color: var(--outcome-ok); }
 .shell-outcome--refused { color: var(--outcome-refused); }
 .shell-outcome--failed { color: var(--outcome-failed); }
+.shell-outcome--cancelled { color: var(--outcome-cancelled); }
 
-.shell-result__facts { display: grid; gap: 6px; margin: 0 0 16px; }
-.shell-result__facts > div { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; }
-@media (min-width: 640px) {
-  .shell-result__facts > div { grid-template-columns: 8rem minmax(0, 1fr); gap: 12px; }
+.shell-result__facts { margin: 0 0 20px; }
+.shell-result__facts > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  padding-block: 8px;
+  border-top: 1px solid var(--rule-divider);
 }
-.shell-result__facts dt { font: 600 0.75rem/1.6 var(--font-mono); letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-muted); }
+.shell-result__facts > div:first-child { border-top: 0; padding-top: 0; }
+@media (min-width: 640px) {
+  .shell-result__facts > div { grid-template-columns: 8rem minmax(0, 1fr); gap: 12px; align-items: baseline; }
+}
+.shell-result__facts dt {
+  color: var(--ink-muted);
+  font: var(--type-label);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+}
 .shell-result__facts dd { margin: 0; overflow-wrap: anywhere; }
 
-.shell-answer { margin: 0 0 16px; }
-.shell-answer blockquote { margin: 0; padding: 4px 0 4px 16px; border-left: 6px solid var(--rule); }
-.shell-answer blockquote p { margin: 0; font: 400 clamp(1.15rem, 2.8vw, 1.4rem)/1.4 var(--font-display); }
-.shell-answer figcaption { margin-top: 8px; font: 0.8rem/1.5 var(--font-mono); color: var(--ink-muted); }
+.shell-answer { margin: 0 0 20px; }
+.shell-answer blockquote { margin: 0; padding: 4px 0 4px 16px; border-left: var(--bar-width) solid var(--rule); }
+.shell-answer blockquote p { margin: 0; font: var(--type-voice); }
+.shell-answer figcaption { margin-top: 8px; color: var(--ink-muted); font: var(--type-small); }
 
-.shell-refusal, .shell-blocked, .shell-missing {
-  margin: 0 0 16px;
-  padding: 14px 16px;
-  border: var(--border-width) solid var(--rule);
-  background: var(--outcome-refused-fill);
+/* A refusal, a blocked read: a bar at the left edge, no box (they sit inside the card). */
+.shell-refusal, .shell-blocked {
+  margin: 0 0 20px;
+  padding: 2px 0 2px 16px;
+  border-left: var(--bar-width) solid var(--outcome-refused);
   color: var(--ink);
 }
 .shell-refusal p, .shell-blocked p, .shell-missing p { margin: 0 0 8px; }
 .shell-refusal p:last-child, .shell-blocked p:last-child, .shell-missing p:last-child { margin-bottom: 0; }
 .shell-refusal__intro { font-weight: 600; }
-.shell-stop + .shell-stop { border-top: 1px solid var(--rule); padding-top: 8px; }
-.shell-stop__line { font: 600 0.9rem/1.5 var(--font-mono); overflow-wrap: anywhere; }
+.shell-stop + .shell-stop { border-top: 1px solid var(--rule-divider); padding-top: 8px; }
+.shell-stop__line { font: 600 var(--step-code) / 1.5 var(--font-mono); overflow-wrap: anywhere; }
 .shell-stop__line code { font-size: 1em; }
-.shell-note { font-size: 0.9rem; }
-.shell-blocked__title, .shell-missing__title { display: flex; align-items: center; gap: 8px; font: 700 0.85rem/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em; }
+.shell-note { font: var(--type-small); }
+.shell-blocked__title, .shell-missing__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 700 var(--step-outcome) / 1.4 var(--font-ui);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+}
 .shell-blocked__title svg, .shell-missing__title svg { width: 18px; height: 18px; flex: none; }
-.shell-missing { max-width: 52rem; margin-top: 28px; }
+
+/* Standalone, so it keeps its own edge. */
+.shell-missing {
+  max-width: 52rem;
+  margin: 28px 0 0;
+  padding: 14px 16px;
+  border: var(--border-width) solid var(--rule);
+  background: var(--surface);
+  color: var(--ink);
+}
 
 .shell-result__more { margin: 0; }
 .shell-result__more a {
-  display: inline-flex; align-items: center; gap: 6px; min-height: 44px;
-  font: 600 0.9rem/1.3 var(--font-mono);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--target-min);
+  font: var(--type-button);
 }
 .shell-result__more svg { width: 16px; height: 16px; }
 
-/* ---- Lesson panels from src/lessons ---- */
+/* ---- Sections from src/lessons ---- */
 .shell-panel { min-width: 0; }
 .shell-panel--narrow { max-width: 56rem; }
 .shell-panel > * { scroll-margin-top: 16px; }
 
 /* ---- Credits ---- */
-.shell-credits__list { display: grid; gap: 10px; margin: 0 0 16px; max-width: 72ch; }
-.shell-credits__list > div { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; padding-bottom: 10px; border-bottom: 1px solid var(--rule); }
-@media (min-width: 640px) {
-  .shell-credits__list > div { grid-template-columns: 12rem minmax(0, 1fr); gap: 16px; }
+.shell-credits__list { display: grid; margin: 0 0 16px; max-width: 72ch; }
+.shell-credits__list > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  padding-block: 10px;
+  border-bottom: 1px solid var(--rule-divider);
 }
-.shell-credits__list dt { font: 600 0.75rem/1.7 var(--font-mono); letter-spacing: 0.05em; text-transform: uppercase; }
+@media (min-width: 640px) {
+  .shell-credits__list > div { grid-template-columns: 12rem minmax(0, 1fr); gap: 16px; align-items: baseline; }
+}
+.shell-credits__list dt {
+  font: var(--type-label);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+}
 .shell-credits__list dd { margin: 0; overflow-wrap: anywhere; }
+
+/* ---- Narrow screens: zones and cards tighten to 12px ---- */
+@media (max-width: 419px) {
+  .shell-zone { padding: 12px; }
+  .shell-result__head, .shell-result__body { padding-inline: 12px; }
+  .shell-labels__item { padding: 16px 12px; }
+}
+
+/* ---- Forced colours: tints drop away, so state and edges keep a system-colour mark ---- */
+@media (forced-colors: active) {
+  .shell-zone, .shell-fact { border-top-color: CanvasText; }
+  .shell-labels__item { border-top: var(--border-width) solid CanvasText; }
+  .shell-refusal, .shell-blocked { border-left-color: CanvasText; }
+  .shell-index__num { forced-color-adjust: none; background: CanvasText; color: Canvas; border-color: CanvasText; }
+  .shell-choice[data-state="on"] { forced-color-adjust: none; background: Highlight; color: HighlightText; border-color: Highlight; }
+}

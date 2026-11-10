@@ -47,13 +47,13 @@ A second lesson uses **invented data** for a fictional operator, Northgate Cycle
 
 1. **Change one word and run it.** In *Who gets to read what?*, edit who is asking or what the simulated model asks for, then press **Run**. Each "Try" button changes exactly one word and tells you what the gate should do.
 2. **Read the result.** It says *Allowed* or *Refused*. A refusal names the check that stopped it, shows the exact sentence the model was told, and confirms that nothing was read.
-3. **Follow the run step by step.** Use the step list, the graph, or the **Guide**, which narrates each step in plain words (**Next**, **Back**, or **Play**).
+3. **Follow the run step by step.** The **Guide** comes first and narrates each step in plain words (**Next**, **Back**, or **Play**). Developers can open **Every step with timings** for the step list and a graph of the same steps.
 4. **Try the recorded examples**, including a forged permission and a document that tries to trick the agent.
 5. **Explore the bike data.** Pick a question, allow or block the data read, and open **Show the numbers** under a chart to see the exact table.
 
 ![The playground in dark mode after the one-word change to "guest": the result is labelled "Simulated in your browser" and "Refused", and the operator view reads "Stopped at caller · TOOL_NOT_GRANTED" with a note that a production app would show people one neutral message.](docs/images/playground-refused.png)
 
-![The trace of a refused run: a numbered list of eight steps on the left, the Guide narrating "Recorded replay. A visitor, signed in as guest, asked…" with Back, Next and Play buttons, and a graph of the same steps.](docs/images/trace-guide.png)
+![The trace of a refused run: the Guide on a pale yellow panel narrating "Recorded replay. A visitor, signed in as guest, asked…" with Back, Next and Play buttons, the selected step's details beside it, and below, an open "Every step with timings (for developers)" section listing eight steps, two of them marked Refused.](docs/images/trace-guide.png)
 
 **What the three labels mean**
 

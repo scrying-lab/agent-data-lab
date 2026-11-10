@@ -4,6 +4,21 @@
 */
 @import "tailwindcss";
 
+/*
+  Metric-matched fallback for Space Grotesk (--font-ui), so swapping in the web font barely moves
+  anything. Values come from the font's own tables (unitsPerEm 1000, ascender 984, descender -292,
+  line gap 0) against Arial (and its metric twins Liberation Sans and Arimo), with size-adjust set by
+  the letter-frequency-weighted average advance width: 0.4837 em for Space Grotesk, 0.4371 em for Arial.
+*/
+@font-face {
+  font-family: "Space Grotesk Fallback";
+  src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Arimo");
+  size-adjust: 110.65%;
+  ascent-override: 88.93%;
+  descent-override: 26.39%;
+  line-gap-override: 0%;
+}
+
 /* shadcn component colours, mapped onto the lab's tokens so light and dark both follow tokens.css. */
 @theme inline {
   --color-background: var(--paper);
@@ -41,24 +56,34 @@ body {
   overflow-wrap: break-word;
 }
 
+/* Headings stay in the serif and step down the scale in tokens.css. Components may pick another step. */
 h1, h2, h3 {
   font-family: var(--font-display);
   font-weight: 400;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
+  letter-spacing: var(--track-panel);
+  line-height: var(--leading-panel);
   text-wrap: balance;
 }
+h1 { font-size: var(--step-hero); letter-spacing: var(--track-hero); line-height: var(--leading-hero); }
+h2 { font-size: var(--step-section); letter-spacing: var(--track-section); line-height: var(--leading-section); }
+h3 { font-size: var(--step-sub); letter-spacing: var(--track-sub); line-height: var(--leading-sub); }
 
 code, pre, kbd, samp { font-family: var(--font-mono); }
 
 /* Links are underlined everywhere, so they never depend on colour alone. */
 a { color: var(--link); text-decoration: underline; text-underline-offset: 0.18em; }
 
-/* One visible focus ring for everything a keyboard can reach. */
+/*
+  One visible focus ring for everything a keyboard can reach: 3px at a 2px offset. Inside a yellow
+  fill the ring turns black, because the dark-theme blue is only 2:1 against yellow. The ring is
+  never animated: components must not list outline in their transitions.
+*/
 :focus-visible {
-  outline: 2px solid var(--focus);
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
+[data-fill="yellow"] :focus-visible,
+.on-yellow :focus-visible { outline-color: var(--focus-on-fill); }
 
 .sr-only {
   position: absolute;
@@ -72,15 +97,125 @@ a { color: var(--link); text-decoration: underline; text-underline-offset: 0.18e
   border: 0;
 }
 
+/*
+  The button ladder (src/components/ui/button.tsx). In the components layer, so page CSS that
+  already styles a button keeps winning until its lane adopts the variant.
+  1 primary: yellow, black text, a black edge in both themes, a 4px offset shadow.
+  2 cancel: the red wash, no shadow; inactive is dashed and muted. Retry is a neutral outline.
+  3 tertiary: paper and a 2px rule, the blue wash on hover.
+  4 toggle: borderless and underlined; pressed adds the blue wash and a heavier underline.
+*/
+@layer components {
+  .lab-btn {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: var(--target-min);
+    min-width: var(--target-min);
+    padding: 0 16px;
+    border: var(--border-width) solid transparent;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--ink);
+    font: var(--type-button);
+    letter-spacing: normal;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition-property: background-color, color, box-shadow, transform, text-decoration-color;
+    transition-duration: 120ms;
+    transition-timing-function: ease-out;
+  }
+  .lab-btn svg { width: 16px; height: 16px; flex-shrink: 0; pointer-events: none; }
+  .lab-btn:disabled { cursor: not-allowed; }
+  .lab-btn[aria-disabled="true"] { cursor: not-allowed; }
+
+  .lab-btn--sm { min-height: 36px; min-width: 36px; padding: 0 12px; gap: 6px; }
+  .lab-btn--xs { min-height: 28px; min-width: 28px; padding: 0 8px; gap: 4px; }
+  .lab-btn--lg { min-height: 48px; padding: 0 24px; }
+  .lab-btn--icon { padding: 0; width: var(--target-min); }
+  .lab-btn--icon-sm { padding: 0; min-height: 36px; min-width: 36px; width: 36px; }
+  .lab-btn--icon-xs { padding: 0; min-height: 28px; min-width: 28px; width: 28px; }
+  .lab-btn--icon-lg { padding: 0; min-height: 48px; min-width: 48px; width: 48px; }
+
+  .lab-btn--primary {
+    background: var(--brand-yellow);
+    color: var(--brand-yellow-ink);
+    border-color: var(--btn-primary-edge);
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--shadow-color);
+  }
+  .lab-btn--primary:hover { transform: translate(1px, 1px); box-shadow: 3px 3px 0 var(--shadow-color); }
+  .lab-btn--primary:active { transform: translate(var(--shadow-offset), var(--shadow-offset)); box-shadow: none; }
+  .lab-btn--primary:disabled,
+  .lab-btn--primary[aria-disabled="true"] {
+    background: var(--paper);
+    color: var(--ink-muted);
+    border-color: var(--rule);
+    border-style: dashed;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .lab-btn--cancel {
+    background: var(--wash-red);
+    color: var(--btn-cancel-text);
+    border-color: var(--btn-cancel-border);
+    box-shadow: none;
+  }
+  .lab-btn--cancel:hover { text-decoration: underline; text-underline-offset: 0.2em; }
+  .lab-btn--cancel:disabled,
+  .lab-btn--cancel[aria-disabled="true"] { border-style: dashed; color: var(--ink-muted); text-decoration: none; }
+  .lab-btn--cancel[data-action="retry"] { background: var(--paper); color: var(--ink); border-color: var(--rule); border-style: solid; }
+  .lab-btn--cancel[data-action="retry"]:hover { background: var(--wash-blue); text-decoration: none; }
+
+  .lab-btn--tertiary { background: var(--paper); color: var(--ink); border-color: var(--rule); }
+  .lab-btn--tertiary:hover { background: var(--wash-blue); }
+  .lab-btn--tertiary:disabled,
+  .lab-btn--tertiary[aria-disabled="true"] { background: var(--paper); color: var(--ink-muted); border-style: dashed; }
+
+  .lab-btn--toggle {
+    padding: 0 8px;
+    background: transparent;
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+  }
+  .lab-btn--toggle:hover { text-decoration-thickness: 2px; }
+  .lab-btn--toggle[aria-pressed="true"],
+  .lab-btn--toggle[data-state="on"] { background: var(--wash-blue); color: var(--text-blue); text-decoration-thickness: 3px; }
+
+  .lab-btn--ghost:hover { background: var(--surface); }
+  .lab-btn--link { min-width: 0; padding: 0 4px; color: var(--link); text-decoration: underline; text-underline-offset: 0.18em; }
+}
+
+/*
+  Forced colours (Windows contrast themes): fills and shadows drop away, so every control and label
+  keeps a system-colour border and text, and pressed or inactive states keep a visible difference.
+*/
+@media (forced-colors: active) {
+  :focus-visible { outline-color: Highlight; }
+  [data-fill="yellow"] :focus-visible, .on-yellow :focus-visible { outline-color: Highlight; }
+  .lab-btn { border-color: ButtonText; box-shadow: none; }
+  .lab-btn--toggle { border-color: transparent; }
+  .lab-btn--toggle[aria-pressed="true"],
+  .lab-btn--toggle[data-state="on"] { forced-color-adjust: none; background: Highlight; color: HighlightText; border-color: Highlight; }
+  .lab-btn:disabled, .lab-btn[aria-disabled="true"] { color: GrayText; border-color: GrayText; border-style: dashed; }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
 }
 
+/* No motion at all when asked: no transitions or animations start, even on hover or focus. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    animation: none !important;
+    transition: none !important;
     scroll-behavior: auto !important;
   }
+  .lab-btn--primary:hover, .lab-btn--primary:active { transform: none; }
 }

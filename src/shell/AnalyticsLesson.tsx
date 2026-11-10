@@ -40,7 +40,7 @@ export function AnalyticsLesson({ runs = analyticsRuns, recordings = allRecordin
 
   return (
     <section id={ANALYTICS_ID} className="shell-section shell-lesson" aria-labelledby={headingId}>
-      <LessonIntro lesson="analytics" kicker="Lesson 2 · Analytics" title="What the bike data says" headingId={headingId} />
+      <LessonIntro lesson="analytics" numeral="03" kicker="Lesson 2 · Analytics" title="What the bike data says" headingId={headingId} />
 
       <div className="shell-controls">
         <ChoiceGroup label="Question" options={questionOptions} value={scenario} onChange={setScenario} />
@@ -68,7 +68,7 @@ export function AnalyticsLesson({ runs = analyticsRuns, recordings = allRecordin
             <MissingRecording what={`the chart for this question (the saved result failed its check)`} command="npm run record" />
           ))}
           <CompareModels runs={recordings} />
-          <TracePanel run={run} />
+          <TracePanel run={run} showTier={false} />
         </div>
       ) : (
         <MissingRecording what={`this question with “${label}”`} command="npm run record" />
