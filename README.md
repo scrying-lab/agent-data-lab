@@ -2,12 +2,14 @@
 
 **A small AI agent that answers questions about real bike-sharing data, with a gate that checks every request before any data is read.**
 
-[Try it](#try-it) · [How to use it](#how-to-use-the-lab) · [How it works](#how-it-works) · [Run it yourself](#run-it-yourself) · [Releases](#releases)
+[Try it](#try-it) · [How to use it](#how-to-use-the-lab) · [How it works](#how-it-works) · [Run it yourself](#run-it-yourself) · [Releases](#releases) · [Read the article][article]
 
 > [!NOTE]
 > Everything on the lab page runs in your browser, and **no AI model is called there**: no keys, no sign-in, nothing leaves the page.
 > The playground runs the real Strands agent loop and its gate right now, with a script playing the model's part. The other examples are recorded runs of the same code. <!-- claim: C-SIM-BROWSER-LOOP -->
 > Runs made with a real AI model are recorded separately and always labelled as recordings.
+
+**The story behind the lab:** [The Human Part Is the Hard Part][article], an article by Ian Mitchell on [ianmitch.dev][owner-site] about building it with an AI coding agent, and why governance and provenance matter more than speed.
 
 ---
 
@@ -203,6 +205,8 @@ Version **1.0.0** is the first release. Every change after it ships as a numbere
 More detail on sources and design choices: [docs/references.md](docs/references.md).
 
 [try-it]: https://scrying-lab.github.io/agent-data-lab/
+[article]: https://ianmitch.dev/notes/the-human-part-is-the-hard-part
+[owner-site]: https://ianmitch.dev
 [dataset]: https://doi.org/10.24432/C5W894
 [cc-by]: https://creativecommons.org/licenses/by/4.0/
 [houston]: https://main.d2vu7hxgv1aq23.amplifyapp.com/

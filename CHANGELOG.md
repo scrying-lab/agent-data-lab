@@ -14,6 +14,13 @@ or recorded live run. Nothing is called live unless a real model produced it.
 Planned for later releases: live recordings on Amazon Bedrock with two models side by side, a third
 editable block for the analytics lesson, and a verified WSO2 gateway experiment.
 
+## [1.1.3] - 2026-11-10
+
+### Added
+
+- The README links to the article about the lab, "The Human Part Is the Hard Part", on the author's
+  website (`README.md`, `content/links.ts`).
+
 ## [1.1.2] - 2026-11-09
 
 Nothing on the page changes. This release is for people working on the code.

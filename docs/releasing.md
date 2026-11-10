@@ -60,7 +60,9 @@ maintainer's machine.
 5. Create a GitHub Release named `vX.Y.Z` and paste that version's CHANGELOG section as its notes.
 6. Once the deploy finishes, open the site and check that it loads and labels every result.
 7. If the hosted address is new, set `links.project.site` in `content/links.ts`. The tests then
-   require the README to link to it instead of the placeholder.
+   require the README to link to it instead of the placeholder. The same goes for
+   `links.project.article` and `links.project.ownerWebsite` and the README's `[article]` and
+   `[owner-site]` references.
 
 ## Never
 

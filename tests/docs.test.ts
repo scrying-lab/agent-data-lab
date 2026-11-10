@@ -125,6 +125,14 @@ describe('public links', () => {
     const tryIt = read('README.md').match(/^\[try-it\]:\s*(\S+)/m)?.[1]
     expect(tryIt).toBe(links.project.site ?? '#try-it')
   })
+
+  it('README links the article and the owner\'s website once they are known', () => {
+    const readme = read('README.md')
+    for (const [ref, url] of [['article', links.project.article], ['owner-site', links.project.ownerWebsite]] as const) {
+      const defined = readme.match(new RegExp(`^\\[${ref}\\]:\\s*(\\S+)`, 'm'))?.[1]
+      expect(defined, ref).toBe(url ?? undefined)
+    }
+  })
 })
 
 describe('public docs stay safe and licensed', () => {

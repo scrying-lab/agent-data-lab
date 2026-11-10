@@ -12,9 +12,9 @@ export const links = {
     /** Hosted lab. null until the site is deployed; README links to its "Try it" section meanwhile. */
     site: 'https://scrying-lab.github.io/agent-data-lab/' as string | null,
     /** The owner's article that introduces the project (the primary written resource). null until published. */
-    article: null as string | null,
+    article: 'https://ianmitch.dev/notes/the-human-part-is-the-hard-part' as string | null,
     /** The owner's personal website. null until the owner supplies it. */
-    ownerWebsite: null as string | null,
+    ownerWebsite: 'https://ianmitch.dev' as string | null,
   },
   data: {
     bikeSharingDoi: 'https://doi.org/10.24432/C5W894',
